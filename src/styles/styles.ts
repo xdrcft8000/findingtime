@@ -1,5 +1,10 @@
 import {StyleSheet} from 'react-native';
 import COLOURS from '../../constants/colours';
+import {Dimensions} from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+const SCREEN_WIDTH = 375;
+const FONT_SCALE_FACTOR = width / SCREEN_WIDTH;
 
 const commonStyles = StyleSheet.create({
   container: {
@@ -10,9 +15,23 @@ const commonStyles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins-Bold',
   },
-  titleText: {
-    fontSize: 20,
-    fontFamily: 'Poppins-Regular',
+  findingText: {
+    fontSize: 80,
+    fontFamily: 'PlayfairDisplay-Regular',
+    paddingLeft: '5%',
+  },
+  timeText: {
+    fontSize: 80,
+    fontFamily: 'PlayfairDisplay-Regular',
+    alignSelf: 'flex-end',
+    paddingRight: '5%',
+  },
+  icon: {
+    color: 'white',
+    backgroundColor: 'black',
+  },
+  textBasic: {
+    color: 'black',
   },
   smallText: {
     fontSize: 14,
@@ -65,24 +84,43 @@ const commonStyles = StyleSheet.create({
     borderRadius: 100,
   },
   textInput: {
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 15,
-    paddingVertical: 5,
-    marginVertical: 3,
+    width: '80%',
+    paddingVertical: 12,
     paddingHorizontal: 15,
     marginHorizontal: 15,
+    borderRadius: 15,
+    marginVertical: 5,
+    justifyContent: 'center',
     backgroundColor: 'white',
+    color: 'black',
+    fontSize: 16,
+    fontFamily: 'GowunDodum-Regular',
+    height: 40,
+  },
+  textInputTitle: {
+    width: '80%',
+    fontSize: 16,
+    fontFamily: 'GowunDodum-Regular',
+    paddingLeft: 5,
+  },
+  textInputError: {
+    width: '80%',
+    fontSize: 16,
+    fontFamily: 'GowunDodum-Regular',
+    textAlign: 'center',
+    color: 'red',
   },
   button: {
-    color: COLOURS.green,
-    backgroundColor: COLOURS.green,
+    width: '80%',
+    color: COLOURS.salmon,
+    backgroundColor: COLOURS.salmon,
     paddingVertical: 12,
     paddingHorizontal: 15,
     marginHorizontal: 15,
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    marginVertical: 5,
   },
   inactiveButton: {
     paddingVertical: 12,
@@ -93,10 +131,23 @@ const commonStyles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLOURS.darkgrey,
   },
-  buttonText: {
+  whiteButton: {
+    width: '80%',
     color: 'white',
+    backgroundColor: 'white',
+    borderRadius: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginHorizontal: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 5,
+  },
+
+  buttonText: {
+    color: 'black',
     fontSize: 16,
-    fontFamily: 'Poppins',
+    fontFamily: 'GowunDodum-Regular',
   },
   clearButton: {
     borderWidth: 1,
@@ -127,8 +178,12 @@ const lightStyles = StyleSheet.create({
     ...commonStyles.text,
     color: 'black',
   },
-  titleText: {
-    ...commonStyles.titleText,
+  findingText: {
+    ...commonStyles.findingText,
+    color: 'black',
+  },
+  timeText: {
+    ...commonStyles.timeText,
     color: 'black',
   },
   icon: {
@@ -154,10 +209,15 @@ const darkStyles = StyleSheet.create({
     ...commonStyles.text,
     color: 'white',
   },
-  titleText: {
-    ...commonStyles.titleText,
+  findingText: {
+    ...commonStyles.findingText,
     color: COLOURS.white,
   },
+  timeText: {
+    ...commonStyles.timeText,
+    color: COLOURS.white,
+  },
+
   icon: {
     color: 'white',
     backgroundColor: 'black',

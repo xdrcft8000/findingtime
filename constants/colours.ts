@@ -8,6 +8,7 @@ const COLOURS = {
   fuscia: '#C20A78',
   orange: '#FC7536',
   yellow: '#FFE95C',
+  salmon: '#F6C1BE',
 };
 
 export default COLOURS;

@@ -473,13 +473,13 @@ const commonStyles = StyleSheet.create({
   days: {
     flexDirection: 'row',
     textAlign: 'center',
-    marginLeft: 8,
+    marginLeft: 10,
   },
   day: {
     textAlign: 'right',
     width: SQUARE_SIZE,
-    fontFamily: 'Poppins-Regular',
-    fontSize: FONT_SIZE - 3,
+    fontFamily: 'GowunDodum-Regular',
+    fontSize: FONT_SIZE - 1,
     color: 'grey',
   },
   gridAndLabels: {},
@@ -517,7 +517,7 @@ const commonStyles = StyleSheet.create({
   },
   hour: {
     fontSize: FONT_SIZE + 2,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'GowunDodum-Regular',
     overflow: 'visible',
   },
   bottomRow: {

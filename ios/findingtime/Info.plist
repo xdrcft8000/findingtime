@@ -32,7 +32,7 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
@@ -66,6 +66,7 @@
 		<string>PlayfairDisplay-Regular.ttf</string>
 		<string>PlayfairDisplay-SemiBold.ttf</string>
 		<string>PlayfairDisplay-SemiBoldItalic.ttf</string>
+		<string>GowunDodum-Regular.ttf</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
