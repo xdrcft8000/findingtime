@@ -4,7 +4,7 @@ const nameValidationSchema = Yup.object().shape({
   name: Yup.string()
     .min(3, 'Name must be at least 3 characters')
     .max(25, 'Name must be at most 25 characters')
-    .matches(/^[a-zA-Z\-]+$/, 'Name must only contain letters with no spaces')
+    .matches(/^[a-zA-Z\-]+$/, 'Only use letters with no spaces')
     .required('Name is required'),
 });
 

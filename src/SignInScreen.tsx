@@ -23,11 +23,13 @@ import Animated, {
 import {Button, Loading, TextInputTitle} from './components/Button';
 import {validateEmail, validateName, validatePassword} from './Validation';
 import COLOURS from '../constants/colours';
-import { darkStyles, lightStyles } from './styles/styles';
+import {darkStyles, lightStyles} from './styles/styles';
+import {useAuth} from './Auth';
 
 const {height, width: screenWidth} = Dimensions.get('window');
 
 const LoginSection = ({animatedStyles}: {animatedStyles: any}) => {
+  const auth = useAuth();
   const [errors, setErrors] = useState({
     email: '',
     password: '',
@@ -39,11 +41,31 @@ const LoginSection = ({animatedStyles}: {animatedStyles: any}) => {
     Keyboard.dismiss();
     validateLoginForm().then(valid => {
       if (valid) {
-        console.log(email, password);
+        auth
+          .signIn(email, password)
+          .then(() => {
+            console.log('User signed in successfully');
+          })
+          .catch(err => {
+            if (err.code === 'auth/invalid-email') {
+              setErrors({...errors, email: 'Invalid email'});
+            } else if (err.code === 'auth/invalid-password') {
+              setErrors({...errors, password: 'Invalid password'});
+            } else if (err.code === 'auth/user-not-found') {
+              setErrors({
+                ...errors,
+                email: 'No account exists with this email',
+              });
+            } else if (err.code === 'auth/invalid-credential') {
+              setErrors({
+                email: 'No account exists with these login details',
+                password: 'No account existswith these login details',
+              });
+            }
+          });
       }
     });
   };
-
   const validateLoginForm = async () => {
     const newErrors = {
       email: '',
@@ -96,6 +118,10 @@ const LoginSection = ({animatedStyles}: {animatedStyles: any}) => {
         value={email}
         onChangeText={setEmail}
         onFocus={changeEmail}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        textContentType="oneTimeCode"
       />
       <TextInputTitle
         title={'Password'}
@@ -104,12 +130,21 @@ const LoginSection = ({animatedStyles}: {animatedStyles: any}) => {
         value={password}
         onChangeText={setPassword}
         onFocus={changePassword}
+        textContentType="password"
+        secureTextEntry={true}
+        autoCapitalize="none"
+        autoComplete="current-password"
+        keyboardType="default"
       />
-      <Button
-        title={'Sign in'}
-        containerStyle={{marginTop: 18}}
-        onPress={handleLogin}
-      />
+      {auth.loading ? (
+        <Loading size={20} containerStyle={{marginTop: 18}} />
+      ) : (
+        <Button
+          title={'Sign in'}
+          containerStyle={{marginTop: 18}}
+          onPress={handleLogin}
+        />
+      )}
     </Animated.View>
   );
 };
@@ -123,6 +158,7 @@ const RegisterSection = ({animatedStyles}: {animatedStyles: any}) => {
   const [firstname, setFirstname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const auth = useAuth();
 
   const changeFirstname = () => {
     if (errors.name !== '') {
@@ -144,11 +180,33 @@ const RegisterSection = ({animatedStyles}: {animatedStyles: any}) => {
 
   const handleNewUser = () => {
     Keyboard.dismiss();
-    validateRegistrationForm().then(valid => {
-      if (valid) {
-        console.log(firstname, email, password);
-      }
-    });
+    validateRegistrationForm()
+      .then(valid => {
+        if (valid) {
+          auth
+            .createUser(email, password, firstname)
+            .then(() => {
+              // User created successfully
+              console.log('User created successfully');
+            })
+            .catch(err => {
+              // Handle specific error codes
+              if (err.code === 'auth/email-already-in-use') {
+                setErrors({...errors, email: 'Email already in use'});
+              } else if (err.code === 'auth/invalid-email') {
+                setErrors({...errors, email: 'Invalid email'});
+              } else if (err.code === 'auth/weak-password') {
+                setErrors({...errors, password: 'Password is too weak'});
+              } else if (err.code === 'auth/invalid-password') {
+                setErrors({...errors, password: 'Invalid password'});
+              }
+            });
+        }
+      })
+      .catch(error => {
+        console.error('Error validating registration form:', error);
+        // Handle validation error
+      });
   };
 
   const validateRegistrationForm = async () => {
@@ -189,21 +247,28 @@ const RegisterSection = ({animatedStyles}: {animatedStyles: any}) => {
         },
       ]}>
       <TextInputTitle
-        title={'First name'}
+        title={'Display name'}
         dark={true}
         containerStyle={{marginTop: 22}}
         value={firstname}
         onChangeText={setFirstname}
         onFocus={changeFirstname}
         error={errors.name}
+        autoCapitalize="words"
+        autoComplete="name-given"
+        keyboardType="default"
       />
       <TextInputTitle
-        title={'Email'}
+        title={'Email (meeting links may be sent here)'}
         dark={true}
         error={errors.email}
         value={email}
         onChangeText={setEmail}
         onFocus={changeEmail}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        textContentType="oneTimeCode"
       />
       <TextInputTitle
         title={'Password'}
@@ -212,12 +277,21 @@ const RegisterSection = ({animatedStyles}: {animatedStyles: any}) => {
         value={password}
         onChangeText={setPassword}
         onFocus={changePassword}
+        textContentType="password"
+        secureTextEntry={true}
+        autoCapitalize="none"
+        autoComplete="new-password"
+        keyboardType="default"
       />
-      <Button
-        title={'Sign up'}
-        containerStyle={{marginTop: 22}}
-        onPress={handleNewUser}
-      />
+      {auth.loading ? (
+        <Loading size={20} containerStyle={{marginTop: 18}} />
+      ) : (
+        <Button
+          title={'Sign up'}
+          containerStyle={{marginTop: 22}}
+          onPress={handleNewUser}
+        />
+      )}
     </Animated.View>
   );
 };
@@ -244,7 +318,6 @@ function SignInScreen(): React.JSX.Element {
       easing: Easing.inOut(Easing.quad),
     });
   };
-
   const handleBackward = () => {
     if (Keyboard.isVisible()) {
       Keyboard.dismiss();

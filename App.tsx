@@ -6,9 +6,14 @@
  */
 import React from 'react';
 import {Router} from './src/Router';
+import {AuthProvider} from './src/Auth';
 
 const App = () => {
-  return <Router />;
+  return (
+    <AuthProvider>
+      <Router />
+    </AuthProvider>
+  );
 };
 
 export default App;

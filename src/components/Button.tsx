@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {
   TouchableOpacity,
-  Text,
+  Text as RNText,
   TouchableOpacityProps,
   ViewStyle,
   TextStyle,
@@ -11,6 +11,8 @@ import {
   TextInput,
   View,
   ActivityIndicator,
+  ViewProps,
+  TextProps,
 } from 'react-native';
 import {commonStyles} from '../styles/styles';
 import Icon from 'react-native-vector-icons/Feather';
@@ -41,14 +43,14 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   return (
     <TouchableOpacity style={[commonStyles.button, containerStyle]} {...props}>
-      <Text
+      <RNText
         style={[
           commonStyles.buttonText,
           textStyle,
           {opacity: disabled ? 0.5 : 1},
         ]}>
         {title}
-      </Text>
+      </RNText>
     </TouchableOpacity>
   );
 };
@@ -69,14 +71,14 @@ export const WhiteButton: React.FC<ButtonProps> = ({
         dark && {backgroundColor: COLOURS.white},
       ]}
       {...props}>
-      <Text
+      <RNText
         style={[
           commonStyles.buttonText,
           textStyle,
           {opacity: disabled ? 0.5 : 1},
         ]}>
         {title}
-      </Text>
+      </RNText>
     </TouchableOpacity>
   );
 };
@@ -96,14 +98,14 @@ export const ClearButton: React.FC<ButtonProps> = ({
         dark && {borderColor: COLOURS.white},
       ]}
       {...props}>
-      <Text
+      <RNText
         style={[
           commonStyles.smallText,
           textStyle,
           dark && {color: COLOURS.white},
         ]}>
         {title}
-      </Text>
+      </RNText>
     </TouchableOpacity>
   );
 };
@@ -154,9 +156,9 @@ export const TextInputTitle: React.FC<TextInputTitleProps> = ({
         containerStyle,
         {width: '100%', alignItems: 'center', height: 96},
       ]}>
-      <Text style={[commonStyles.textInputTitle, {color: titleColour}]}>
+      <RNText style={[commonStyles.textInputTitle, {color: titleColour}]}>
         {title}
-      </Text>
+      </RNText>
       <TextInput
         style={[
           commonStyles.textInput,
@@ -164,7 +166,7 @@ export const TextInputTitle: React.FC<TextInputTitleProps> = ({
         ]}
         {...textInputProps}
       />
-      <Text style={[commonStyles.textInputError]}>{error}</Text>
+      <RNText style={[commonStyles.textInputError]}>{error}</RNText>
     </View>
   );
 };
@@ -182,7 +184,7 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
   return (
     <View
       style={{
-        width: '80%',
+        width: '100%',
         flexDirection: 'row',
         alignContent: 'center',
         alignItems: 'center',
@@ -194,6 +196,7 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
           searchicon={<Icon name="search" size={15} color={'black'} />}
           closeicon={<Icon name="x" size={20} color={'black'} />}
           notFoundText={"Selection doesn't not exist"}
+          placeholder="Select an option"
           boxStyles={{
             borderWidth: 0,
             borderRadius: 15,
@@ -208,6 +211,7 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
             position: 'absolute',
             width: '100%',
             marginTop: 53,
+            zIndex: 100,
           }}
           dropdownTextStyles={commonStyles.buttonText}
           {...selectListProps}
@@ -226,7 +230,16 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
   );
 };
 
-export const Loading = ({size = 20}: {size: number}) => {
+type LoadingProps = {
+  size: number;
+  containerStyle?: ViewStyle;
+} & ViewProps;
+
+export const Loading: React.FC<LoadingProps> = ({
+  size,
+  containerStyle,
+  ...viewProps
+}) => {
   const loadingProgress = useSharedValue(-1);
   useEffect(() => {
     loadingProgress.value = withRepeat(
@@ -244,7 +257,7 @@ export const Loading = ({size = 20}: {size: number}) => {
   }));
   const whiteStyles = useAnimatedProps(() => ({}));
   return (
-    <View style={{ alignItems: 'center'}}>
+    <View style={[containerStyle, {alignItems: 'center'}]} {...viewProps}>
       <Animated.View
         style={[
           salmonStyles,
@@ -271,5 +284,45 @@ export const Loading = ({size = 20}: {size: number}) => {
         ]}
       />
     </View>
+  );
+};
+
+type EasyTextProps = {
+  darkbg: boolean;
+  size: number;
+  font: string;
+  textStyle?: TextStyle;
+} & TextProps;
+const fontCodes = {
+  G: 'GowunDodum-Regular',
+  P: 'PlayfairDisplay-Regular',
+  Psb: 'PlayfairDisplay-SemiBold',
+  Psbi: 'PlayfairDisplay-SemiBoldItalic',
+  Pb: 'PlayfairDisplay-Bold',
+  Pbi: 'PlayfairDisplay-BoldItalic',
+  Pm: 'PlayfairDisplay-Medium',
+  Pmi: 'PlayfairDisplay-MediumItalic',
+  Pi: 'PlayfairDisplay-Italic',
+};
+export const Text: React.FC<EasyTextProps> = ({
+  darkbg,
+  font,
+  size,
+  textStyle,
+  ...textProps
+}) => {
+  const textColour = darkbg ? COLOURS.white : COLOURS.black;
+  return (
+    <RNText
+      style={[
+        textStyle,
+        {
+          color: textColour,
+          fontSize: size,
+          fontFamily: fontCodes[font as keyof typeof fontCodes],
+        },
+      ]}
+      {...textProps}
+    />
   );
 };

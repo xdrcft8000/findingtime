@@ -1,15 +1,15 @@
 import {StyleSheet} from 'react-native';
 import COLOURS from '../../constants/colours';
 import {Dimensions} from 'react-native';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 const SCREEN_WIDTH = 375;
 const FONT_SCALE_FACTOR = width / SCREEN_WIDTH;
 
 const commonStyles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
   },
   text: {
     fontSize: 18,
@@ -25,6 +25,20 @@ const commonStyles = StyleSheet.create({
     fontFamily: 'PlayfairDisplay-Regular',
     alignSelf: 'flex-end',
     paddingRight: '5%',
+  },
+  introText: {
+    fontSize: 34*FONT_SCALE_FACTOR,
+    fontFamily: 'PlayfairDisplay-Regular',
+    color: COLOURS.white,
+    paddingLeft: '5%',
+  },
+  introSubText: {
+    fontFamily: 'GowunDodum-Regular',
+    fontSize: 18,
+    color: COLOURS.white,
+    textAlign: 'right',
+    width: '95%',
+    paddingTop: '7%',
   },
   icon: {
     color: 'white',
@@ -85,7 +99,7 @@ const commonStyles = StyleSheet.create({
   },
   textInput: {
     width: '80%',
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 15,
     marginHorizontal: 15,
     borderRadius: 15,
@@ -172,7 +186,7 @@ const lightStyles = StyleSheet.create({
   ...commonStyles,
   container: {
     ...commonStyles.container,
-    backgroundColor: 'white',
+    backgroundColor: COLOURS.white,
   },
   text: {
     ...commonStyles.text,
@@ -180,11 +194,11 @@ const lightStyles = StyleSheet.create({
   },
   findingText: {
     ...commonStyles.findingText,
-    color: 'black',
+    color: COLOURS.black,
   },
   timeText: {
     ...commonStyles.timeText,
-    color: 'black',
+    color: COLOURS.black,
   },
   icon: {
     color: 'black',
