@@ -9,6 +9,7 @@ const COLOURS = {
   orange: '#FC7536',
   yellow: '#FFE95C',
   salmon: '#F6C1BE',
+  teal: '#77d1cd',
 };
 
 export default COLOURS;

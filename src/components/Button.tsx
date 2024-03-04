@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {forwardRef, useEffect, useState} from 'react';
 import {
   TouchableOpacity,
   Text as RNText,
@@ -13,6 +13,8 @@ import {
   ActivityIndicator,
   ViewProps,
   TextProps,
+  Platform,
+  TouchableNativeFeedback,
 } from 'react-native';
 import {commonStyles} from '../styles/styles';
 import Icon from 'react-native-vector-icons/Feather';
@@ -25,6 +27,28 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import {DateSchema} from 'yup';
+import {
+  addDays,
+  addWeeks,
+  endOfWeek,
+  format,
+  isBefore,
+  isSameDay,
+  startOfWeek,
+} from 'date-fns';
+
+const fontCodes = {
+  G: 'GowunDodum-Regular',
+  P: 'PlayfairDisplay-Regular',
+  Psb: 'PlayfairDisplay-SemiBold',
+  Psbi: 'PlayfairDisplay-SemiBoldItalic',
+  Pb: 'PlayfairDisplay-Bold',
+  Pbi: 'PlayfairDisplay-BoldItalic',
+  Pm: 'PlayfairDisplay-Medium',
+  Pmi: 'PlayfairDisplay-MediumItalic',
+  Pi: 'PlayfairDisplay-Italic',
+};
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -32,6 +56,7 @@ interface ButtonProps extends TouchableOpacityProps {
   textStyle?: TextStyle;
   dark?: boolean;
   disabled?: boolean;
+  half?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -39,10 +64,17 @@ export const Button: React.FC<ButtonProps> = ({
   containerStyle,
   textStyle,
   disabled,
+  half,
   ...props
 }) => {
   return (
-    <TouchableOpacity style={[commonStyles.button, containerStyle]} {...props}>
+    <TouchableOpacity
+      style={[
+        commonStyles.button,
+        containerStyle,
+        {width: half ? '50%' : '80%'},
+      ]}
+      {...props}>
       <RNText
         style={[
           commonStyles.buttonText,
@@ -61,6 +93,7 @@ export const WhiteButton: React.FC<ButtonProps> = ({
   textStyle,
   dark,
   disabled,
+  half,
   ...props
 }) => {
   return (
@@ -69,6 +102,7 @@ export const WhiteButton: React.FC<ButtonProps> = ({
         commonStyles.whiteButton,
         containerStyle,
         dark && {backgroundColor: COLOURS.white},
+        {width: half ? '50%' : '80%'},
       ]}
       {...props}>
       <RNText
@@ -171,6 +205,34 @@ export const TextInputTitle: React.FC<TextInputTitleProps> = ({
   );
 };
 
+type TextInputClearProps = {
+  font: string;
+  size: number;
+  dark?: boolean;
+} & TextInputProps;
+
+export const TextInputClear: React.FC<TextInputClearProps> = forwardRef<
+  TextInput,
+  TextInputClearProps
+>(({font, size, dark, ...textInputProps}, ref) => {
+  const {style, ...otherProps} = textInputProps;
+  return (
+    <TextInput
+      ref={ref}
+      style={[
+        {
+          fontFamily: fontCodes[font as keyof typeof fontCodes],
+          fontSize: size,
+          backgroundColor: dark ? COLOURS.black : COLOURS.white,
+          color: dark ? COLOURS.white : COLOURS.black,
+        },
+        style,
+      ]}
+      {...otherProps}
+    />
+  );
+});
+
 type DropDownMenuProps = {
   dark: boolean;
   onPress: () => void;
@@ -195,7 +257,7 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
           arrowicon={<Icon name="chevron-down" size={18} color={'black'} />}
           searchicon={<Icon name="search" size={15} color={'black'} />}
           closeicon={<Icon name="x" size={20} color={'black'} />}
-          notFoundText={"Selection doesn't not exist"}
+          notFoundText={"Press the '+' button"}
           placeholder="Select an option"
           boxStyles={{
             borderWidth: 0,
@@ -205,7 +267,7 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
           }}
           inputStyles={[commonStyles.buttonText, {paddingLeft: 5}]}
           dropdownStyles={{
-            backgroundColor: 'white',
+            backgroundColor: dark ? COLOURS.white : 'white',
             borderRadius: 15,
             borderWidth: 0,
             position: 'absolute',
@@ -291,38 +353,94 @@ type EasyTextProps = {
   darkbg: boolean;
   size: number;
   font: string;
-  textStyle?: TextStyle;
 } & TextProps;
-const fontCodes = {
-  G: 'GowunDodum-Regular',
-  P: 'PlayfairDisplay-Regular',
-  Psb: 'PlayfairDisplay-SemiBold',
-  Psbi: 'PlayfairDisplay-SemiBoldItalic',
-  Pb: 'PlayfairDisplay-Bold',
-  Pbi: 'PlayfairDisplay-BoldItalic',
-  Pm: 'PlayfairDisplay-Medium',
-  Pmi: 'PlayfairDisplay-MediumItalic',
-  Pi: 'PlayfairDisplay-Italic',
-};
 export const Text: React.FC<EasyTextProps> = ({
   darkbg,
   font,
   size,
-  textStyle,
   ...textProps
 }) => {
   const textColour = darkbg ? COLOURS.white : COLOURS.black;
+  const {style, ...otherProps} = textProps;
+
   return (
     <RNText
       style={[
-        textStyle,
         {
           color: textColour,
           fontSize: size,
           fontFamily: fontCodes[font as keyof typeof fontCodes],
         },
+        style, // Apply additional style props
       ]}
-      {...textProps}
+      {...otherProps} // Spread otherProps instead of textProps
     />
+  );
+};
+
+type DateSelectorProps = {
+  dark: boolean;
+  setDate: (date: Date) => void;
+  initialDate?: Date;
+} & ViewProps;
+
+export const DateSelector: React.FC<DateSelectorProps> = ({
+  dark,
+  setDate,
+  initialDate,
+}) => {
+  const today = new Date();
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
+    initialDate ? initialDate : startOfWeek(new Date(), {weekStartsOn: 1}), // Start week on Monday
+  );
+
+  const previousWeek = () => {
+    setCurrentWeekStart(prevWeekStart => addWeeks(prevWeekStart, -1));
+    setDate(addWeeks(currentWeekStart, -1));
+  };
+
+  const nextWeek = () => {
+
+    setCurrentWeekStart(prevWeekStart => addWeeks(prevWeekStart, 1));
+    setDate(addWeeks(currentWeekStart, 1));
+  };
+  // Calculate the end date of the week (Sunday)
+  const endOfWeekDate = addDays(currentWeekStart, 6);
+
+  // Format the start and end dates of the current week
+  const startDate = format(currentWeekStart, 'dd MMM');
+  const endDate = format(endOfWeekDate, 'dd MMM');
+
+  // Determine whether to hide the back chevron
+  const hideBackChevron =
+    isSameDay(currentWeekStart, today) || isBefore(currentWeekStart, today);
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'space-between',
+        paddingHorizontal: '5%',
+      }}>
+      {hideBackChevron ? (
+        <View style={{width: 20}} />
+      ) : (
+        <TouchableOpacity onPress={previousWeek}>
+          <Icon
+            name="chevron-left"
+            size={20}
+            color={dark ? 'white' : 'black'}
+          />
+        </TouchableOpacity>
+      )}
+      <Text size={20} font="P" darkbg={dark}>
+        {startDate} - {endDate}
+      </Text>
+      <TouchableOpacity onPress={nextWeek}>
+        <Icon name="chevron-right" size={20} color={dark ? 'white' : 'black'} />
+      </TouchableOpacity>
+    </View>
   );
 };

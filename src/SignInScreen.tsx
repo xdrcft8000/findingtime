@@ -13,6 +13,8 @@ import {
   useColorScheme,
   View,
   Keyboard,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import Animated, {
   Easing,
@@ -25,6 +27,7 @@ import {validateEmail, validateName, validatePassword} from './Validation';
 import COLOURS from '../constants/colours';
 import {darkStyles, lightStyles} from './styles/styles';
 import {useAuth} from './Auth';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 const {height, width: screenWidth} = Dimensions.get('window');
 
@@ -415,10 +418,28 @@ function SignInScreen(): React.JSX.Element {
     opacity: registerProgress.value + loginProgress.value,
   }));
 
+  const animatedContainerStyles = useAnimatedStyle(() => ({
+    height:
+      blackSize +
+      height * 0.2 -
+      height * 0.06 +
+      loginProgress.value * 70 +
+      registerProgress.value * 180,
+    padding: `${8 * loginProgress.value + 20 * registerProgress.value}%`,
+  }));
+
   return (
-    <KeyboardAvoidingView
-      behavior={'position'}
-      keyboardVerticalOffset={-30}
+    <KeyboardAwareScrollView
+      scrollEnabled={false}
+      contentContainerStyle={Platform.OS === 'ios' ? {flex: 1} : null}
+      extraHeight={190}
+      enableOnAndroid={false}
+      enableAutomaticScroll
+      // behavior={Platform.OS === 'ios' ? 'position' : 'height'}
+      // keyboardVerticalOffset={-30}
+      // extraHeight={180}
+      // ref={scrollRef}
+      // scrollEnabled={false}
       style={{
         flex: 1,
         backgroundColor: isDarkMode ? COLOURS.black : COLOURS.white,
@@ -436,13 +457,15 @@ function SignInScreen(): React.JSX.Element {
         <Text style={[styles.findingText]}>Finding</Text>
         <Text style={[styles.timeText, {paddingBottom: '5%'}]}>Time</Text>
       </AnimatedSafeAreaView>
-      <View
-        style={{
-          width: '100%',
-          height: blackSize + height * 0.2 - height * 0.06,
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}>
+      <Animated.View
+        style={[
+          animatedContainerStyles,
+          {
+            width: '100%',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+          },
+        ]}>
         <Animated.View
           onTouchMove={event => {
             if (
@@ -456,6 +479,7 @@ function SignInScreen(): React.JSX.Element {
           style={[
             animatedBlackStyles,
             {
+              overflow: 'visible',
               backgroundColor: 'black',
               borderRadius: blackRadius,
               justifyContent: 'center',
@@ -526,8 +550,8 @@ function SignInScreen(): React.JSX.Element {
             <RegisterSection animatedStyles={registerInStyles} />
           )}
         </Animated.View>
-      </View>
-    </KeyboardAvoidingView>
+      </Animated.View>
+    </KeyboardAwareScrollView>
   );
 }
 
