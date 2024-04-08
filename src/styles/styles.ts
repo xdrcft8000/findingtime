@@ -27,7 +27,7 @@ const commonStyles = StyleSheet.create({
     paddingRight: '5%',
   },
   introText: {
-    fontSize: 34*FONT_SCALE_FACTOR,
+    fontSize: 34 * FONT_SCALE_FACTOR,
     fontFamily: 'PlayfairDisplay-Regular',
     color: COLOURS.white,
     paddingLeft: '5%',

@@ -57,6 +57,8 @@ interface ButtonProps extends TouchableOpacityProps {
   dark?: boolean;
   disabled?: boolean;
   half?: boolean;
+  third?: boolean;
+  loading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -65,14 +67,28 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
   disabled,
   half,
+  third,
+  loading = false,
   ...props
 }) => {
+  if (loading) {
+    return (
+      <View style={containerStyle}>
+        <Loading
+          size={25}
+          containerStyle={{
+            height: 51,
+          }}
+        />
+      </View>
+    );
+  }
   return (
     <TouchableOpacity
       style={[
         commonStyles.button,
         containerStyle,
-        {width: half ? '50%' : '80%'},
+        {width: half ? '50%' : third ? '33%' : '80%'},
       ]}
       {...props}>
       <RNText
@@ -254,20 +270,37 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
       <View style={{width: '85%', flexDirection: 'column'}}>
         <SelectList
           save="value"
-          arrowicon={<Icon name="chevron-down" size={18} color={'black'} />}
-          searchicon={<Icon name="search" size={15} color={'black'} />}
-          closeicon={<Icon name="x" size={20} color={'black'} />}
+          arrowicon={
+            <Icon
+              name="chevron-down"
+              size={18}
+              color={dark ? COLOURS.white : 'black'}
+            />
+          }
+          searchicon={
+            <Icon
+              name="search"
+              size={15}
+              color={dark ? COLOURS.white : 'black'}
+            />
+          }
+          closeicon={
+            <Icon name="x" size={20} color={dark ? COLOURS.white : 'black'} />
+          }
           notFoundText={"Press the '+' button"}
           placeholder="Select an option"
           boxStyles={{
             borderWidth: 0,
             borderRadius: 15,
-            backgroundColor: 'white',
+            backgroundColor: dark ? 'black' : 'white',
             height: 45,
           }}
-          inputStyles={[commonStyles.buttonText, {paddingLeft: 5}]}
+          inputStyles={[
+            commonStyles.buttonText,
+            {paddingLeft: 5, color: dark ? COLOURS.white : 'black'},
+          ]}
           dropdownStyles={{
-            backgroundColor: dark ? COLOURS.white : 'white',
+            backgroundColor: dark ? 'black' : 'white',
             borderRadius: 15,
             borderWidth: 0,
             position: 'absolute',
@@ -275,7 +308,11 @@ export const DropDownMenu: React.FC<DropDownMenuProps> = ({
             marginTop: 53,
             zIndex: 100,
           }}
-          dropdownTextStyles={commonStyles.buttonText}
+          dropdownTextStyles={{
+            color: dark ? COLOURS.white : 'black',
+            fontSize: 16,
+            fontFamily: 'GowunDodum-Regular',
+          }}
           {...selectListProps}
         />
       </View>
@@ -400,7 +437,6 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   };
 
   const nextWeek = () => {
-
     setCurrentWeekStart(prevWeekStart => addWeeks(prevWeekStart, 1));
     setDate(addWeeks(currentWeekStart, 1));
   };
@@ -414,6 +450,79 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   // Determine whether to hide the back chevron
   const hideBackChevron =
     isSameDay(currentWeekStart, today) || isBefore(currentWeekStart, today);
+  const hitBox = 20;
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'space-between',
+        paddingHorizontal: '5%',
+      }}>
+      {hideBackChevron ? (
+        <View style={{width: 20}} />
+      ) : (
+        <TouchableOpacity
+          onPress={previousWeek}
+          hitSlop={{left: hitBox, right: hitBox, top: hitBox, bottom: hitBox}}>
+          <Icon
+            name="chevron-left"
+            size={20}
+            color={dark ? 'white' : 'black'}
+          />
+        </TouchableOpacity>
+      )}
+      <Text size={20} font="P" darkbg={dark}>
+        {startDate} - {endDate}
+      </Text>
+      <TouchableOpacity
+        onPress={nextWeek}
+        hitSlop={{left: hitBox, right: hitBox, top: hitBox, bottom: hitBox}}>
+        <Icon name="chevron-right" size={20} color={dark ? 'white' : 'black'} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+type DateDurationSelectorProps = {
+  dark: boolean;
+  date: Date;
+  setDate: (date: Date) => void;
+  initialDate?: Date;
+  end?: boolean;
+} & ViewProps &
+  DateSelectorProps;
+
+export const DateDurationSelector: React.FC<DateDurationSelectorProps> = ({
+  dark,
+  date,
+  setDate,
+  end,
+}) => {
+  const today = new Date();
+
+  const previousWeek = () => {
+    setDate(addWeeks(date, -1));
+  };
+
+  const nextWeek = () => {
+    setDate(addWeeks(date, 1));
+  };
+
+  // Format the start and end dates of the current week
+  const startDate = format(date, 'dd MMMMMMMMMMM yy');
+
+  // Determine whether to hide the back chevron
+  let hideBackChevron = false;
+
+  if (end) {
+    hideBackChevron =
+      isSameDay(addWeeks(date, -1), today) ||
+      isBefore(addWeeks(date, -1), today);
+  } else {
+    hideBackChevron = isSameDay(date, today) || isBefore(date, today);
+  }
 
   return (
     <View
@@ -436,7 +545,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         </TouchableOpacity>
       )}
       <Text size={20} font="P" darkbg={dark}>
-        {startDate} - {endDate}
+        {startDate}
       </Text>
       <TouchableOpacity onPress={nextWeek}>
         <Icon name="chevron-right" size={20} color={dark ? 'white' : 'black'} />

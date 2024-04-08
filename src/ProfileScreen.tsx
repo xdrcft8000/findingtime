@@ -6,6 +6,7 @@ import {
   Switch,
   Dimensions,
   Alert,
+  Platform,
 } from 'react-native';
 import {useAuth} from './Auth';
 import {
@@ -22,6 +23,7 @@ import COLOURS from '../constants/colours';
 import Modal from 'react-native-modal';
 import WeekView from './components/WeekView';
 import {useUser} from './User';
+import Dialog from 'react-native-dialog';
 
 const {height} = Dimensions.get('window');
 interface SelectionTitles {
@@ -34,11 +36,6 @@ const ProfileScreen = ({navigation}) => {
   const user = useUser();
   const styles = auth.styles;
   const [selected, _setSelected] = React.useState('');
-  const [visible, setVisible] = useState(false);
-  const [selectionTitles, setSelectionTitles] = useState<SelectionTitles[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [resetKey, setResetKey] = useState(0);
-
   const setSelected = (value: string) => {
     _setSelected(value);
     if (value) {
@@ -46,9 +43,16 @@ const ProfileScreen = ({navigation}) => {
     }
   };
 
+  const [visible, setVisible] = useState(false);
   const toggleOverlay = () => {
     setVisible(!visible);
   };
+  const [selectionTitles, setSelectionTitles] = useState<SelectionTitles[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [resetKey, setResetKey] = useState(0);
+
+  const [promptVisible, setPromptVisible] = useState(false);
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (!user.loading) {
@@ -83,9 +87,17 @@ const ProfileScreen = ({navigation}) => {
         {
           text: 'Delete',
           onPress: () => {
-            user.deleteSelection(selected);
-            setSelected('');
-            collectTitles();
+            user
+              .checkDeletable(selected)
+              .then(() => {
+                console.log('deleted successfully');
+                user.deleteSelection(selected);
+                setSelected('');
+                collectTitles();
+              })
+              .catch(err => {
+                showDeleteErrorAlert(err);
+              });
           },
           style: 'destructive', // Set the style to destructive to make the button red
         },
@@ -94,7 +106,126 @@ const ProfileScreen = ({navigation}) => {
     );
   };
 
+  const showDeleteErrorAlert = (err: string) => {
+    Alert.alert("Can't be deleted", err);
+  };
+
+  const showDeleteAccountAlert = () => {
+    Alert.alert(
+      'Delete Account?',
+      'This will permanently delete your account and all your data.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Continue',
+          onPress: () => {
+            if (Platform.OS === 'ios') {
+              reLoginInAlert();
+            } else {
+              androidReloginAlert();
+            }
+          },
+          style: 'destructive', // Set the style to destructive to make the button red
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+  const androidReloginAlert = () => {
+    setPromptVisible(true);
+    // prompt(
+    //   'Enter your password to delete your account.',
+    //   'prompt', // Display error message if any
+    //   [
+    //     {
+    //       text: 'Cancel',
+    //       style: 'cancel',
+    //     },
+    //     {
+    //       text: 'Delete',
+    //       onPress: passinput => {
+    //         console.log('pass', passinput);
+    //         // Handle deletion logic here
+    //         if (!passinput) {
+    //           Alert.alert('Incorrect password, please try again');
+    //           return;
+    //         }
+    //         auth
+    //           .signIn(auth.authData!.email, passinput)
+    //           .then(res => {
+    //             handleDeleteAccount();
+    //           })
+    //           .catch(err => {
+    //             if (err.code === 'auth/invalid-credential') {
+    //               console.log('Wrong password');
+    //               Alert.alert('Incorrect password, please try again');
+    //             }
+    //           });
+    //       },
+    //       style: 'destructive',
+    //     },
+    //   ],
+    //   {
+    //     type: 'secure-text',
+    //     cancelable: true,
+    //   },
+    // );
+  };
+
+  const reLoginInAlert = () => {
+    Alert.prompt(
+      'Enter your password to delete your account.',
+      ' ', // Display error message if any
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: pass => loginThenDelete(pass),
+          style: 'destructive',
+        },
+      ],
+      'secure-text',
+      '',
+      'default',
+    );
+  };
+
+  const loginThenDelete = (passinput: any) => {
+    // Handle deletion logic here
+    if (!passinput) {
+      Alert.alert('Incorrect password, please try again');
+      return;
+    }
+    auth
+      .signIn(auth.authData!.email, passinput)
+      .then(res => {
+        handleDeleteAccount();
+      })
+      .catch(err => {
+        if (err.code === 'auth/invalid-credential') {
+          console.log('Wrong password');
+          Alert.alert('Incorrect password, please try again');
+        }
+      });
+  };
+
+  const handleDeleteAccount = () => {
+    console.log('handling delete');
+    auth.deleteUser().then(() => {
+      user.deleteUserData(auth.authData!.id);
+    });
+  };
+
   const handleNewSelection = () => {
+    setSelected('');
+    user.mostRecentSelection.current = null;
+
     navigation.navigate('New Selection');
     user.setSelectionTitle('');
     user.clearSelection();
@@ -117,14 +248,14 @@ const ProfileScreen = ({navigation}) => {
               }}>
               <Icon
                 name="bars"
-                size={30}
+                size={25}
                 color={auth.dark ? COLOURS.white : COLOURS.black}
                 style={{padding: '8%'}}
               />
             </TouchableOpacity>
             <Text
               darkbg={auth.dark}
-              size={40}
+              size={35}
               font={'P'}
               style={{padding: '5%'}}>
               {auth.authData?.name}
@@ -170,11 +301,14 @@ const ProfileScreen = ({navigation}) => {
                   key={resetKey}
                 />
                 <WeekView
-                  START_HOUR={0}
-                  END_HOUR={8}
+                  START_HOUR={user.selections[selected].startHour}
+                  END_HOUR={user.selections[selected].endHour}
                   availibility={
                     user.selections[selected][
-                      user.getClosestDate(user.getDate())!
+                      user.getClosestDate(
+                        user.getDate(),
+                        user.availabilitySelection.current,
+                      )!
                     ]
                   }
                   containerStyle={{paddingTop: '10%'}}
@@ -192,7 +326,7 @@ const ProfileScreen = ({navigation}) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}>
-                <Text darkbg={auth.dark} size={14} font={'G'}>
+                <Text darkbg={auth.dark} size={16} font={'G'}>
                   Nothing selected
                 </Text>
               </View>
@@ -286,7 +420,6 @@ const ProfileScreen = ({navigation}) => {
               <Button
                 title={'Sign Out'}
                 onPress={() => {
-                  auth.setFirstTime(true);
                   auth.signOut();
                 }}
               />
@@ -294,13 +427,34 @@ const ProfileScreen = ({navigation}) => {
                 dark={auth.dark}
                 title={'Delete Account'}
                 onPress={() => {
-                  auth.setFirstTime(true);
-                  auth.signOut();
+                  showDeleteAccountAlert();
                 }}
               />
               <View style={{height: 100}} />
             </View>
           </Modal>
+          <Dialog.Container visible={promptVisible}>
+            <Dialog.Title>Delete Account</Dialog.Title>
+            <Dialog.Description>
+              Enter your password to delete your account, this cannot be undone.
+            </Dialog.Description>
+            <Dialog.Input
+              label="Password"
+              secureTextEntry
+              onChangeText={text => setPassword(text)}
+            />
+            <Dialog.Button
+              label="Cancel"
+              onPress={() => {
+                setPromptVisible(false);
+              }}
+            />
+            <Dialog.Button
+              label="Delete"
+              style={{color: 'red'}}
+              onPress={() => loginThenDelete(password)}
+            />
+          </Dialog.Container>
         </SafeAreaView>
       ) : (
         <View

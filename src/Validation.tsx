@@ -61,3 +61,51 @@ export const validatePassword = async (password: string): Promise<string> => {
     }
   }
 };
+
+const titleValidationSchema = Yup.object().shape({
+  title: Yup.string()
+    .min(3, 'Name must be at least 3 characters long')
+    .max(25, 'Name must be at most 20 characters long')
+    .required('Enter a name'),
+});
+
+export const validateTitle = async (title: string): Promise<string> => {
+  try {
+    await titleValidationSchema.validate({title});
+    return 'valid'; // Return 'valid' if the title is valid
+  } catch (error) {
+    if (error instanceof Yup.ValidationError) {
+      return error.message;
+    } else {
+      console.error('Error validating password:', error);
+      return 'An unexpected error occurred';
+    }
+  }
+};
+
+const durationValidationSchema = Yup.object().shape({
+  duration: Yup.string()
+    .required('Enter the amount of weeks you want to find the best time for.')
+    .test('notZero', 'Enter a number larger than 0', value => value !== '0')
+    .test(
+      'notEmpty',
+      'Enter the amount of weeks you want to find the best time for',
+      value => value !== '',
+    )
+    .matches(/^[0-9]+$/, 'Duration must contain only numbers'),
+});
+
+// Define the validation function
+export const validateDuration = async (duration: string): Promise<string> => {
+  try {
+    await durationValidationSchema.validate({duration});
+    return 'valid'; // Return 'valid' if duration is valid
+  } catch (error) {
+    if (error instanceof Yup.ValidationError) {
+      return error.message;
+    } else {
+      console.error('Error validating duration:', error);
+      return 'An unexpected error occurred';
+    }
+  }
+};

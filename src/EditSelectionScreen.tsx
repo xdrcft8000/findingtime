@@ -1,9 +1,16 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Alert, Dimensions, SafeAreaView, TouchableOpacity, View} from 'react-native';
+import React, {useRef, useState} from 'react';
+import {
+  Alert,
+  Dimensions,
+  SafeAreaView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {useAuth} from './Auth';
 import {
   Button,
   DateSelector,
+  Loading,
   Text,
   TextInputClear,
   WhiteButton,
@@ -22,6 +29,30 @@ const EditSelectionScreen = ({navigation}) => {
     user.selections[user.mostRecentSelection.current!].title,
   );
   const textInputRef = useRef<typeof TextInputClear>(null);
+  const [loading, setLoading] = useState(false);
+
+  const decideSize = (length: number) => {
+    if (length > 15) {
+      return 22;
+    } else if (length > 10) {
+      return 25;
+    } else {
+      return 30;
+    }
+  };
+  const [titleSize, setTitleSize] = useState(decideSize(title.length));
+
+  const handleChangeTitle = (text: string) => {
+    setTitleSize(decideSize(text.length));
+    if (text.length > 13) {
+      const count = (text.match(/[wWmMOU]/gi) || []).length;
+      if (count > 13) {
+        setTitleSize(18);
+      }
+    }
+    user.setSelectionTitle(text);
+    setTitle(text);
+  };
 
   const save = () => {
     if (!user.selectionTitle) {
@@ -29,14 +60,24 @@ const EditSelectionScreen = ({navigation}) => {
       textInputRef.current?.focus();
       return;
     }
-    user.editSelection().then(() => {
-      navigation.goBack();
-    });
+    setLoading(true);
+    user
+      .editSelection()
+      .then(() => {
+        setLoading(false);
+        Alert.alert('Saved changes');
+        navigation.goBack();
+      })
+      .catch(err => {
+        console.log(err);
+        setLoading(false);
+        Alert.alert('Error saving changes');
+      });
   };
 
   const showAlert = () => {
     Alert.alert(
-      `Continue without saving?`,
+      'Continue without saving?',
       'All changes will be lost.',
       [
         {
@@ -80,12 +121,12 @@ const EditSelectionScreen = ({navigation}) => {
         <TextInputClear
           ref={textInputRef}
           dark={auth.dark}
-          size={30}
+          size={titleSize}
           font={'P'}
           style={{padding: '5%'}}
-          onChangeText={user.setSelectionTitle}
+          onChangeText={handleChangeTitle}
           autoCorrect={false}
-          maxLength={20}>
+          maxLength={18}>
           {title}
         </TextInputClear>
       </View>
@@ -103,8 +144,10 @@ const EditSelectionScreen = ({navigation}) => {
           initialDate={user.date}
         />
         <WeekSelector
-          START_HOUR={0}
-          END_HOUR={8}
+          START_HOUR={
+            user.selections[user.mostRecentSelection.current!].startHour
+          }
+          END_HOUR={user.selections[user.mostRecentSelection.current!].endHour}
           availibility={[]}
           containerStyle={{paddingTop: '10%'}}
           containerHeight={height * height * 0.00055}
@@ -118,24 +161,37 @@ const EditSelectionScreen = ({navigation}) => {
           long press to box select/unselect
         </Text>
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          width: '80%',
-          marginLeft: '5%',
-          position: 'absolute',
-          bottom: '2%',
-        }}>
-        <WhiteButton
-          title={'Reset'}
-          half
-          dark={auth.dark}
-          containerStyle={{marginRight: 0}}
-          onPress={auth.reset}
-        />
-        <Button title={'Save'} half onPress={save} />
-      </View>
+      {loading ? (
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            position: 'absolute',
+            bottom: '5%',
+          }}>
+          <Loading size={22} />
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: '80%',
+            marginLeft: '5%',
+            position: 'absolute',
+            bottom: '2%',
+          }}>
+          <WhiteButton
+            title={'Reset'}
+            half
+            dark={auth.dark}
+            containerStyle={{marginRight: 0}}
+            onPress={user.reset}
+          />
+          <Button title={'Save'} half onPress={save} />
+        </View>
+      )}
     </SafeAreaView>
   );
 };

@@ -1,16 +1,8 @@
-import React, {
-  useState,
-  useEffect,
-  createContext,
-  useContext,
-  useRef,
-} from 'react';
+import React, {useState, useEffect, createContext, useContext} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import {Alert, useColorScheme} from 'react-native';
 import {darkStyles, lightStyles} from './styles/styles';
-import {format, startOfWeek} from 'date-fns';
-import firestore from '@react-native-firebase/firestore';
 
 type AuthContextData = {
   authData?: AuthData;
@@ -23,21 +15,10 @@ type AuthContextData = {
   signIn: (email: string, password: string) => Promise<any>;
   createUser: (email: string, password: string, name: string) => Promise<any>;
   signOut(): void;
-  deleteUser(): void;
+  deleteUser(): Promise<void>;
   styles: any;
   dark: boolean;
   setDarkMode: (value: boolean) => void;
-  availability: React.MutableRefObject<any[]>;
-  availabilitySelection: React.MutableRefObject<Selection>;
-  date: Date;
-  setDate: (value: Date) => void;
-  updateSelection: () => void;
-  saveSelection: () => void;
-  resetKey: number;
-  reset: () => void;
-  changeFlag: React.MutableRefObject<boolean>;
-  selectionTitle: string;
-  setSelectionTitle: (value: string) => void;
 };
 
 export type AuthData = {
@@ -45,9 +26,6 @@ export type AuthData = {
   name: string;
   id: string;
 };
-interface Selection {
-  [date: string]: boolean[];
-}
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 type Props = {
@@ -62,22 +40,6 @@ const AuthProvider: React.FC<Props> = ({children}) => {
   const colorScheme = useColorScheme();
   const [dark, setDark] = useState(colorScheme === 'dark' ? true : false);
   const styles = dark ? darkStyles : lightStyles;
-  const availability = useRef(Array(8 * 8 * 4).fill(false));
-  const availabilitySelection = useRef<Selection>({});
-  const [date, setDateState] = useState<Date>(
-    startOfWeek(new Date(), {weekStartsOn: 1}), // Start week on Monday
-  );
-  const [selectionTitle, setSelectionTitle] = useState('');
-  const [resetKey, setResetKey] = useState(0);
-  const reset = () => {
-    availability.current = Array(32 * DAY_LENGTH).fill(false);
-    setResetKey(resetKey + 1);
-  };
-  const refresh = () => {
-    setResetKey(resetKey + 1);
-  };
-
-  const changeFlag = useRef(false);
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(newUser => {
@@ -111,81 +73,6 @@ const AuthProvider: React.FC<Props> = ({children}) => {
     await AsyncStorage.setItem('@DarkMode', JSON.stringify(value));
   };
 
-  const setDate = (value: Date) => {
-    updateSelection();
-
-    // Convert the date to a string key
-    const dateKey = format(value, 'yyyy-MM-dd');
-
-    // Check if the date exists in availabilitySelection
-    if (dateKey in availabilitySelection.current) {
-      // If the date exists, update availability.current and refresh
-      availability.current = availabilitySelection.current[dateKey];
-      refresh();
-    } else {
-      const closestDate = getClosestDate(dateKey);
-      closestDate &&
-        (availability.current = [
-          ...availabilitySelection.current[closestDate],
-        ]);
-      refresh();
-    }
-
-    // Set the new date state
-    setDateState(value);
-  };
-
-  const getClosestDate: (dateKey: string) => string | null = (
-    dateKey: string,
-  ) => {
-    const selectionDates = Object.keys(availabilitySelection.current).sort();
-    let closestDate: string | null = null;
-    for (let i = selectionDates.length - 1; i >= 0; i--) {
-      if (selectionDates[i] < dateKey) {
-        closestDate = selectionDates[i];
-        return closestDate;
-      }
-    }
-    return null;
-  };
-
-  const updateSelection = () => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    const currentAvailability = [...availability.current];
-    // Find the closest date prior to the current date
-    const closestDate = getClosestDate(dateKey);
-    // If a previous date is found and its value is identical to currentAvailability, do nothing
-    const closestDateAvailability = closestDate
-      ? availabilitySelection.current[closestDate]
-      : null;
-
-    // If a closest date is found and its value is identical to currentAvailability, do nothing
-    if (
-      closestDate &&
-      JSON.stringify(closestDateAvailability) ===
-        JSON.stringify(currentAvailability)
-    ) {
-      return;
-    }
-
-    // If the date doesn't exist or its value is different from currentAvailability, add it as a new key-value pair
-    availabilitySelection.current[dateKey] = currentAvailability;
-  };
-
-  const saveSelection = async () => {
-    await firestore()
-      .collection('Selections')
-      .add({
-        title: selectionTitle,
-        userID: authData?.id,
-        userName: authData?.name,
-        ...availabilitySelection.current,
-      })
-      .then(() => {
-        console.log('Availability saved');
-      });
-  };
-
   const createUser = async (
     email: string,
     password: string,
@@ -196,6 +83,10 @@ const AuthProvider: React.FC<Props> = ({children}) => {
       const newUserCredential = await auth().createUserWithEmailAndPassword(
         email,
         password,
+      );
+      await AsyncStorage.setItem(
+        '@UserCredential',
+        JSON.stringify(newUserCredential),
       );
 
       console.log('User account created & signed in!');
@@ -226,6 +117,8 @@ const AuthProvider: React.FC<Props> = ({children}) => {
     setLoading(true);
     try {
       const newUser = await auth().signInWithEmailAndPassword(email, password);
+      await AsyncStorage.setItem('@UserCredential', JSON.stringify(newUser));
+
       const userID = newUser.user.uid;
       const userName = newUser.user.displayName;
       const userEmail = newUser.user.email;
@@ -264,13 +157,17 @@ const AuthProvider: React.FC<Props> = ({children}) => {
     }
   };
 
-  const deleteUser = async () => {
+  const deleteUser = async (): Promise<void> => {
+    console.log(auth().currentUser?.email);
+
     try {
       await auth()
         .currentUser?.delete()
         .then(async () => {
           await AsyncStorage.removeItem('@AuthData');
+          await AsyncStorage.removeItem('@DarkMode');
           setAuthData(undefined);
+          return;
         });
     } catch (error) {
       console.log(error);
@@ -314,8 +211,6 @@ const AuthProvider: React.FC<Props> = ({children}) => {
   //   }
   // };
   return (
-    //This component will be used to encapsulate the whole App,
-    //so all components will have access to the Context
     <AuthContext.Provider
       value={{
         authData,
@@ -323,7 +218,6 @@ const AuthProvider: React.FC<Props> = ({children}) => {
         initializing,
         firstTime,
         setFirstTime,
-        // isConnected,
         setLoading,
         signIn,
         createUser,
@@ -332,17 +226,6 @@ const AuthProvider: React.FC<Props> = ({children}) => {
         styles,
         dark,
         setDarkMode,
-        availability,
-        availabilitySelection,
-        updateSelection,
-        saveSelection,
-        date,
-        setDate,
-        resetKey,
-        changeFlag,
-        reset,
-        selectionTitle,
-        setSelectionTitle,
       }}>
       {children}
     </AuthContext.Provider>

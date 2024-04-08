@@ -1,7 +1,19 @@
-import React, {useEffect, useState} from 'react';
-import {View, FlatList, StyleSheet, Text, ViewStyle} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Text,
+  ViewStyle,
+  TouchableOpacity,
+} from 'react-native';
 import COLOURS from '../../constants/colours';
-import {useUser} from '../User';
+import {useGroup} from '../Group';
+import {interpolateColor} from 'react-native-reanimated';
+import Modal from 'react-native-modal';
+import {Text as EasyText} from './Button';
+import Icon2 from 'react-native-vector-icons/Feather';
+import { useAuth } from '../Auth';
 
 interface DisplayAvailibilityGridProps {
   START_HOUR: number;
@@ -10,7 +22,7 @@ interface DisplayAvailibilityGridProps {
   containerHeight: number;
   availibility: boolean[];
   resetKey: number;
-  dark?: boolean;
+  dark: boolean;
 }
 
 //Adjustable
@@ -24,21 +36,155 @@ const NUM_COLUMNS = 8;
 const OFFSET = 10;
 const FONT_SIZE = 41 * 0.35;
 
-const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
+const OverallGroupView: React.FC<DisplayAvailibilityGridProps> = ({
   START_HOUR,
+  END_HOUR,
   containerStyle,
   containerHeight,
   resetKey,
   dark,
 }) => {
-  const {availability} = useUser();
+  const group = useGroup();
+  const {authData} = useAuth();
+  const duration = group.group!.duration;
+  const names = Object.keys(group.group!.compactedAvailability);
+
+  const dayLength = END_HOUR - START_HOUR;
+  const array = Array(dayLength * 32).fill(0);
   const styles = dark ? darkStyles : commonStyles;
+  const maxScore = duration * names.length;
+  let bestScore = useRef(0);
+  const totalScores = useRef(
+    new Array(group.group!.compactedAvailability[names[0]].length).fill(0),
+  );
+  const jointScores = useRef(
+    new Array(group.group!.compactedAvailability[names[0]].length).fill(0),
+  );
+
+  useEffect(() => {
+    totalScores.current = new Array(
+      group.group!.compactedAvailability[names[0]].length,
+    ).fill(0);
+
+    for (let i = 0; i < jointScores.current.length; i++) {
+      const scores = [];
+      for (let j = 0; j < names.length; j++) {
+        scores.push(group.group!.compactedAvailability[names[j]][i]);
+        totalScores.current[i] +=
+          group.group!.compactedAvailability[names[j]][i];
+      }
+      jointScores.current[i] = Math.min(...scores);
+    }
+    bestScore.current = Math.max(...jointScores.current);
+  }, []);
 
   useEffect(() => {
     setReRender(rend => !rend);
   }, [resetKey]);
 
+  const days = [
+    'placeholder',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
   const [_reRender, setReRender] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const toggleModal = () => {
+    setModalVisible(!modalVisible);
+  };
+  const currentIndex = useRef(0);
+
+  const renderScoresModal = () => {
+    const namesAndScores = [];
+    for (const [name, score] of Object.entries(
+      group.group!.compactedAvailability,
+    )) {
+      let userName = name;
+      if (name === authData?.name) {
+        userName = 'You';
+      }
+      namesAndScores.push(
+        <View
+          style={{flexDirection: 'row', paddingVertical: 5}}
+          key={`${name}`}>
+          <EasyText darkbg={dark} size={18} font={'G'}>
+            {userName} can make{' '}
+          </EasyText>
+          <EasyText darkbg={dark} size={18} font={'P'}>
+            {score[currentIndex.current]}/{duration}{' '}
+          </EasyText>
+          <EasyText darkbg={dark} size={18} font={'G'}>
+            weeks
+          </EasyText>
+        </View>,
+      );
+    }
+    return (
+      <Modal
+        testID={'modal'}
+        isVisible={modalVisible}
+        onSwipeComplete={toggleModal}
+        onBackdropPress={toggleModal}
+        useNativeDriverForBackdrop={true}
+        animationIn={'fadeIn'}
+        animationOut={'fadeOut'}
+        animationInTiming={200}
+        animationOutTiming={200}
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <View
+          style={{
+            backgroundColor: dark ? COLOURS.black : COLOURS.white,
+            borderRadius: 20,
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity
+            style={{position: 'absolute', top: 5, right: 5, padding: 10}}
+            onPress={toggleModal}>
+            <Icon2 size={30} name="x" color={'gray'} />
+          </TouchableOpacity>
+          <View style={{paddingVertical: '5%'}}>
+            <EasyText darkbg={dark} size={24} font={'P'}>
+              {days[currentIndex.current % 8]} {getTime(currentIndex.current)}
+            </EasyText>
+          </View>
+          {bestScore.current !== 0 &&
+          jointScores.current[currentIndex.current] === bestScore.current ? (
+            <View
+              style={{
+                backgroundColor: COLOURS.teal,
+                borderRadius: 15,
+                paddingHorizontal: 15,
+                paddingVertical: 10,
+              }}>
+              <EasyText darkbg={false} size={18} font={'G'}>
+                Ideal slot
+              </EasyText>
+            </View>
+          ) : (
+            <EasyText darkbg={dark} size={18} font={'G'} />
+          )}
+          <View style={{paddingVertical: 20}}>{namesAndScores}</View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const handleSquarePress = (index: number) => {
+    currentIndex.current = index;
+    setModalVisible(true);
+  };
 
   // RENDERING
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,6 +192,9 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
     const isLeftmostColumn = index % NUM_COLUMNS === 0;
     const indexVar = index % (NUM_COLUMNS * ZOOM_QUOTIENT); //32
     const hourVar = index % (NUM_COLUMNS * ZOOM_QUOTIENT); //32
+    let jointScore = jointScores.current[index];
+    let score = totalScores.current[index];
+
     return isLeftmostColumn ? (
       <View
         style={[
@@ -62,17 +211,27 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
         </Text>
       </View>
     ) : (
-      <View
+      <TouchableOpacity
+        onPress={() => handleSquarePress(index)}
         style={[
           styles.square,
           // eslint-disable-next-line react-native/no-inline-styles
           {
-            backgroundColor: availability.current[index]
-              ? COLOURS.teal
-              : dark
-              ? COLOURS.darkgrey
-              : 'white',
-            borderColor: dark ? 'black' : COLOURS.grey,
+            backgroundColor:
+              jointScore === 0
+                ? interpolateColor(
+                    score,
+                    [0, maxScore * 1.2],
+                    [dark ? COLOURS.darkgrey : 'white', COLOURS.salmon],
+                  )
+                : jointScore === bestScore.current && bestScore.current > 0
+                ? COLOURS.teal
+                : interpolateColor(
+                    jointScore,
+                    [0, duration * 1.2],
+                    [dark ? COLOURS.darkgrey : 'white', COLOURS.teal],
+                  ),
+            borderColor: dark ? 'black' : COLOURS.lightgrey,
             borderTopWidth:
               indexVar > NUM_COLUMNS * 2
                 ? indexVar < NUM_COLUMNS * 3
@@ -92,8 +251,8 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
                 : 0,
           },
         ]}>
-        {/* <Text>{index}</Text> */}
-      </View>
+        {/* <Text>{maxScore} {score}</Text> */}
+      </TouchableOpacity>
     );
   };
 
@@ -111,11 +270,21 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
     {
       return '';
     }
-    //uncomment this for :30
-    //   return `${hour}:${minutes < 10 ? '0' : ''}${minutes}`;
-    // } else {
-    //   return `${rawHour}:00`;
-    // }
+  };
+
+  const getTime = (index: number) => {
+    const rawHour = Math.floor(index / 8);
+
+    const hour = Math.floor(rawHour / 4) + START_HOUR;
+    //const minutes = Math.round((rawHour % 1) * 60);
+    const clockHour = hour % 12 === 0 ? 12 : hour % 12;
+    const ampm = hour < 12 ? 'am' : 'pm';
+    const mins = (rawHour % 4) * 15;
+    if (mins === 0) {
+      return `${clockHour}${ampm}`;
+    }
+    const timeString = `${clockHour}:${mins}${ampm}`;
+    return timeString;
   };
 
   // HUMAN READABLE OUTPUT
@@ -141,7 +310,7 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
           <View style={styles.hours} />
           <View style={styles.grid}>
             <FlatList
-              data={availability.current}
+              data={array}
               renderItem={renderItem}
               keyExtractor={(item, index) => index.toString()}
               numColumns={NUM_COLUMNS}
@@ -159,12 +328,14 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
       <View style={styles.bottomRow}>
         <View style={styles.bottomScroll} />
       </View>
+      {renderScoresModal()}
     </View>
   );
 };
 
 const commonStyles = StyleSheet.create({
   container: {
+    paddingTop: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -291,4 +462,4 @@ const darkStyles = StyleSheet.create({
   },
 });
 
-export default WeekView;
+export default OverallGroupView;

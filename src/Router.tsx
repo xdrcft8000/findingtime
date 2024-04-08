@@ -5,6 +5,7 @@ import SignInScreen from './SignInScreen';
 import {Loading} from './components/Button';
 import IntroScreen from './IntroScreen';
 import Home from './Home';
+import { UserProvider } from './User';
 
 export const Router = () => {
   const {authData, initializing, styles, firstTime} = useAuth();
@@ -18,7 +19,9 @@ export const Router = () => {
         firstTime ? (
           <IntroScreen />
         ) : (
-          <Home />
+          <UserProvider>
+            <Home />
+          </UserProvider>
         )
       ) : (
         <SignInScreen />

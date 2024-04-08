@@ -1,16 +1,12 @@
 import React, {useEffect} from 'react';
-import {Text, View} from 'react-native';
 import {useAuth} from './Auth';
-import {Button} from './components/Button';
 import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import GroupsScreen from './GroupsScreen';
 import COLOURS from '../constants/colours';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Profile from './Profile';
 import Animated, {useSharedValue, withTiming} from 'react-native-reanimated';
-import {UserContext, UserProvider} from './User';
+import Groups from './Groups';
 
 const Home = () => {
   const {dark, firstTime} = useAuth();
@@ -56,7 +52,7 @@ const Home = () => {
           />
           <Tab.Screen
             name="Groups"
-            component={GroupsScreen}
+            component={Groups}
             options={{
               tabBarIcon: ({color, size}) => (
                 <Icon

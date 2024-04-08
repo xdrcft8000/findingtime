@@ -12,7 +12,15 @@ import {
 import COLOURS from '../../constants/colours';
 import Icon from 'react-native-vector-icons/Feather';
 import {useAuth} from '../Auth';
-import { useUser } from '../User';
+import {useUser} from '../User';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import {RenderSquare} from './PressableSquare';
 
 interface DisplayAvailibilityGridProps {
   START_HOUR: number;
@@ -60,6 +68,19 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
       flatListRef.current.scrollToOffset({offset: offset, animated: true});
     }
   };
+
+  const fadeProgress = useSharedValue(1);
+  const longPress = () => {
+    fadeProgress.value = withSequence(
+      withTiming(0.5, {duration: 150}),
+      withTiming(1, {duration: 150}),
+      // withTiming(1, {duration: 50}),
+    );
+  };
+  const pressOut = () => {
+    fadeProgress.value = withTiming(1, {duration: 100});
+  }
+
   const handleScroll = event => {
     const offsetY = event.nativeEvent.contentOffset.y;
     scrollOffset.current = offsetY;
@@ -69,7 +90,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
   // MAIN ARRAY
   const styles = dark ? darkStyles : commonStyles;
   const DAY_LENGTH = END_HOUR - START_HOUR;
-
+  
   // SCROLLING Y
   const scrollAmount = useRef(0);
   const scrollAmountX = useRef(0);
@@ -236,7 +257,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
     );
   };
   // RENDERING
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const renderItem = ({item, index}: {item: any; index: number}) => {
     const isLeftmostColumn = index % NUM_COLUMNS === 0;
     const indexVar = index % (NUM_COLUMNS * ZOOM_QUOTIENT); //32
@@ -263,21 +284,21 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
           doRender();
         }}
         onLongPress={() => {
+          longPress();
           setFlatListScrollEnabled(false);
           panresponderActive.current = true;
           doRender();
         }}
         pressRetentionOffset={{top: 10, left: 10, bottom: 10, right: 10}}
-
         onPressOut={() => {
+          pressOut();
           setFlatListScrollEnabled(true);
           panresponderActive.current = false;
         }}
         style={({pressed}) => [
           styles.square,
-          // eslint-disable-next-line react-native/no-inline-styles
+
           {
-            opacity: pressed ? 0.5 : 1,
             backgroundColor: availability.current[index]
               ? COLOURS.teal
               : dark
@@ -358,11 +379,11 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
             </View>
           </View>
         </View>
-        <View style={styles.hoursgrid}>
+        <Animated.View style={[styles.hoursgrid, {opacity: fadeProgress}]}>
           <View style={styles.hours} />
           <View
             {...panResponder.panHandlers}
-            style={styles.grid}
+            style={[styles.grid]}
             ref={viewRef}
             onLayout={handleLayout}>
             <FlatList
@@ -382,7 +403,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
             />
           </View>
           <View style={styles.hours} />
-        </View>
+        </Animated.View>
       </View>
       <View style={styles.bottomRow}>
         {scrollAmount.current >= DAY_LENGTH - WINDOW_SIZE ? (

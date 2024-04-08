@@ -18,6 +18,7 @@
 		491D6F11B0AA4024BBCBBB16 /* PlayfairDisplay-BlackItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 143F19EEDC7640BB908C4605 /* PlayfairDisplay-BlackItalic.ttf */; };
 		683B85FDF3B946869819D068 /* PlayfairDisplay-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 366F6BB507C648B3BB017E84 /* PlayfairDisplay-SemiBoldItalic.ttf */; };
 		7264445AAD0506FF1F16894C /* Pods_findingtime_findingtimeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B7AD051B0D7809DFD587686B /* Pods_findingtime_findingtimeTests.framework */; };
+		7786C8852BC07D2F00D20436 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7786C8842BC07D2F00D20436 /* PrivacyInfo.xcprivacy */; };
 		77B0AE612B84FC7000F04A70 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 77B0AE602B84FC7000F04A70 /* GoogleService-Info.plist */; };
 		77E10C092B84AAE600789777 /* Fontisto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77E10BF62B84AAE600789777 /* Fontisto.ttf */; };
 		77E10C0A2B84AAE600789777 /* Octicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77E10BF72B84AAE600789777 /* Octicons.ttf */; };
@@ -75,13 +76,14 @@
 		1A52B487A2A94792BDD0E4A2 /* PlayfairDisplay-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PlayfairDisplay-Regular.ttf"; path = "../assets/fonts/PlayfairDisplay-Regular.ttf"; sourceTree = "<group>"; };
 		1E49B2E8F5782D134948430C /* Pods_findingtime.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_findingtime.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		283C6C5C7E10466499D0C429 /* PlayfairDisplay-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PlayfairDisplay-Bold.ttf"; path = "../assets/fonts/PlayfairDisplay-Bold.ttf"; sourceTree = "<group>"; };
-		32583CEF6A054DC1939CA248 /* GowunDodum-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "GowunDodum-Regular.ttf"; path = "../assets/fonts/GowunDodum-Regular.ttf"; sourceTree = "<group>"; };
+		32583CEF6A054DC1939CA248 /* GowunDodum-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "GowunDodum-Regular.ttf"; path = "../assets/fonts/GowunDodum-Regular.ttf"; sourceTree = "<group>"; };
 		366F6BB507C648B3BB017E84 /* PlayfairDisplay-SemiBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PlayfairDisplay-SemiBoldItalic.ttf"; path = "../assets/fonts/PlayfairDisplay-SemiBoldItalic.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-findingtime.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-findingtime.debug.xcconfig"; path = "Target Support Files/Pods-findingtime/Pods-findingtime.debug.xcconfig"; sourceTree = "<group>"; };
 		4AF930B99580485891359D8D /* PlayfairDisplay-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PlayfairDisplay-ExtraBold.ttf"; path = "../assets/fonts/PlayfairDisplay-ExtraBold.ttf"; sourceTree = "<group>"; };
 		504436B3643F4B0A80431FB9 /* PlayfairDisplay-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PlayfairDisplay-Medium.ttf"; path = "../assets/fonts/PlayfairDisplay-Medium.ttf"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-findingtime.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-findingtime.release.xcconfig"; path = "Target Support Files/Pods-findingtime/Pods-findingtime.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-findingtime-findingtimeTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-findingtime-findingtimeTests.debug.xcconfig"; path = "Target Support Files/Pods-findingtime-findingtimeTests/Pods-findingtime-findingtimeTests.debug.xcconfig"; sourceTree = "<group>"; };
+		7786C8842BC07D2F00D20436 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		77B0AE602B84FC7000F04A70 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		77E10BF62B84AAE600789777 /* Fontisto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fontisto.ttf; sourceTree = "<group>"; };
 		77E10BF72B84AAE600789777 /* Octicons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Octicons.ttf; sourceTree = "<group>"; };
@@ -210,6 +212,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				7786C8842BC07D2F00D20436 /* PrivacyInfo.xcprivacy */,
 				77B0AE602B84FC7000F04A70 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* findingtime */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -388,6 +391,7 @@
 				D7F96A374FF14D5B936E7D71 /* PlayfairDisplay-Italic.ttf in Resources */,
 				16358E2F7A3C4021A66ABD80 /* PlayfairDisplay-Medium.ttf in Resources */,
 				77B0AE612B84FC7000F04A70 /* GoogleService-Info.plist in Resources */,
+				7786C8852BC07D2F00D20436 /* PrivacyInfo.xcprivacy in Resources */,
 				35FA61E5D299481382E977DF /* PlayfairDisplay-MediumItalic.ttf in Resources */,
 				8D45448DADD54690A44BE740 /* PlayfairDisplay-Regular.ttf in Resources */,
 				B778887D8505469C88F1996A /* PlayfairDisplay-SemiBold.ttf in Resources */,
@@ -628,8 +632,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = W2V286C357;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W2V286C357;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = findingtime/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Finding Time";
@@ -638,7 +645,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -646,6 +653,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.app.findingtime;
 				PRODUCT_NAME = findingtime;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "FT Dist";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -658,8 +667,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = W2V286C357;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W2V286C357;
 				INFOPLIST_FILE = findingtime/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Finding Time";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -667,7 +679,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -675,6 +687,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.app.findingtime;
 				PRODUCT_NAME = findingtime;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "FT Dist";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

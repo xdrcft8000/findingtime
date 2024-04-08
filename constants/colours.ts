@@ -4,6 +4,7 @@ const COLOURS = {
   green: '#095D42',
   lightgreen: '#0AC254',
   grey: '#B9BFB4',
+  lightgrey: '#d1d1d1',
   darkgrey: '#363636',
   fuscia: '#C20A78',
   orange: '#FC7536',

@@ -62,13 +62,14 @@ const LoginSection = ({animatedStyles}: {animatedStyles: any}) => {
             } else if (err.code === 'auth/invalid-credential') {
               setErrors({
                 email: 'No account exists with these login details',
-                password: 'No account existswith these login details',
+                password: 'No account exists with these login details',
               });
             }
           });
       }
     });
   };
+
   const validateLoginForm = async () => {
     const newErrors = {
       email: '',
@@ -396,9 +397,23 @@ function SignInScreen(): React.JSX.Element {
     marginBottom: blackProgress.value * height * 0.4,
     top: blackSize / 2 - whiteSize / 2 + blackProgress.value * height * 0.15,
     borderRadius: 90 - blackProgress.value * 70,
-
     // transition out
     opacity: 1 - registerProgress.value - loginProgress.value,
+  }));
+
+  const animatedTealStyles = useAnimatedStyle(() => ({
+    height:
+      whiteSize +
+      blackProgress.value * buttonHeight -
+      whiteSize * blackProgress.value,
+
+    width: whiteSize + blackProgress.value * (screenWidth * 0.8 - whiteSize),
+    marginBottom: blackProgress.value * height * 0.4,
+    top: blackSize / 2 - whiteSize / 2 + blackProgress.value * height * 0.15,
+    borderRadius: 90 - blackProgress.value * 70,
+    // transition out
+    opacity: 1 - registerProgress.value - loginProgress.value,
+    transform: [{translateX: 5 - blackProgress.value * 5}],
   }));
 
   const animatedTextStyles = useAnimatedStyle(() => ({
@@ -514,6 +529,18 @@ function SignInScreen(): React.JSX.Element {
                   </Animated.Text>
                 </TouchableOpacity>
               </Animated.View>
+              <Animated.View
+                style={[
+                  animatedTealStyles,
+                  {
+                    backgroundColor: COLOURS.teal,
+                    borderRadius: 90,
+                    position: 'absolute',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  },
+                ]}
+              />
               <Animated.View
                 style={[
                   animatedWhite2Styles,

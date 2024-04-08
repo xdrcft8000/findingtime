@@ -315,7 +315,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   // HUMAN READABLE OUTPUT
 
   const formatHour = (rawHour: number): string => {
-    console.log(rawHour);
     if (rawHour === 24) {
       return '12am';
     }
