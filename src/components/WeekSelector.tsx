@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
@@ -11,23 +12,25 @@ import {
 } from 'react-native';
 import COLOURS from '../../constants/colours';
 import Icon from 'react-native-vector-icons/Feather';
-import {useAuth} from '../Auth';
-import {useUser} from '../User';
+import {useUser} from '../context/User';
 import Animated, {
-  Easing,
-  useAnimatedStyle,
   useSharedValue,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import {RenderSquare} from './PressableSquare';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+
+// Optional configuration
+const options = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
 
 interface DisplayAvailibilityGridProps {
   START_HOUR: number;
   END_HOUR: number;
   containerStyle?: ViewStyle;
   containerHeight: number;
-  availibility: boolean[];
   resetKey: number;
   dark?: boolean;
 }
@@ -73,13 +76,12 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
   const longPress = () => {
     fadeProgress.value = withSequence(
       withTiming(0.5, {duration: 150}),
-      withTiming(1, {duration: 150}),
       // withTiming(1, {duration: 50}),
     );
   };
   const pressOut = () => {
     fadeProgress.value = withTiming(1, {duration: 100});
-  }
+  };
 
   const handleScroll = event => {
     const offsetY = event.nativeEvent.contentOffset.y;
@@ -90,7 +92,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
   // MAIN ARRAY
   const styles = dark ? darkStyles : commonStyles;
   const DAY_LENGTH = END_HOUR - START_HOUR;
-  
+
   // SCROLLING Y
   const scrollAmount = useRef(0);
   const scrollAmountX = useRef(0);
@@ -156,7 +158,8 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
           //   scrolling.current = true;
           scrolling.current = false;
           selecting.current = !availability.current[index];
-          availability.current[index] = !availability.current[index];
+          availability.current[index] =
+            availability.current[index] === 1 ? 0 : 1;
           doRender();
           startIndex.current = index;
           touchFlag.current = true;
@@ -170,7 +173,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
           zoomFlag.current = true;
           if (touchFlag.current) {
             availability.current[startIndex.current] =
-              !availability.current[startIndex.current];
+              availability.current[startIndex.current] === 1 ? 0 : 1;
             touchFlag.current = false;
             doRender();
           }
@@ -216,7 +219,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
                 j++
               ) {
                 const index = i * NUM_COLUMNS + j;
-                changedArray.current[index] = selecting.current;
+                changedArray.current[index] = selecting.current ? 1 : 0;
               }
             }
             availability.current.forEach((value, index) => {
@@ -258,6 +261,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
   };
   // RENDERING
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderItem = ({item, index}: {item: any; index: number}) => {
     const isLeftmostColumn = index % NUM_COLUMNS === 0;
     const indexVar = index % (NUM_COLUMNS * ZOOM_QUOTIENT); //32
@@ -266,7 +270,6 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
       <View
         style={[
           styles.hourSquare,
-          // eslint-disable-next-line react-native/no-inline-styles
           {
             borderWidth: 0,
             backgroundColor: 'rgba(255, 255, 255, 0)',
@@ -279,15 +282,20 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
       </View>
     ) : (
       <Pressable
+        delayLongPress={200}
         onPress={() => {
-          availability.current[index] = !availability.current[index];
+          ReactNativeHapticFeedback.trigger('impactLight', options);
+          availability.current[index] =
+            availability.current[index] === 1 ? 0 : 1;
           doRender();
         }}
         onLongPress={() => {
+          ReactNativeHapticFeedback.trigger('impactHeavy', options);
           longPress();
           setFlatListScrollEnabled(false);
           panresponderActive.current = true;
           doRender();
+          ReactNativeHapticFeedback.trigger('impactHeavy', options);
         }}
         pressRetentionOffset={{top: 10, left: 10, bottom: 10, right: 10}}
         onPressOut={() => {
@@ -295,6 +303,7 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
           setFlatListScrollEnabled(true);
           panresponderActive.current = false;
         }}
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         style={({pressed}) => [
           styles.square,
 
@@ -332,16 +341,13 @@ const WeekSelector: React.FC<DisplayAvailibilityGridProps> = ({
   const getHour = (index: number) => {
     const rawHour = index / ZOOM_QUOTIENT / NUM_COLUMNS + START_HOUR;
 
-    if (rawHour % 1 == 0) {
+    if (rawHour % 1 === 0) {
       const hour = Math.floor(rawHour) + scrollAmount.current;
       //const minutes = Math.round((rawHour % 1) * 60);
       const clockHour = hour % 12 === 0 ? 12 : hour % 12;
       const ampm = hour < 12 ? 'am' : 'pm';
       return `${clockHour}${ampm}`;
       //return `${hour}:00`;
-    }
-    {
-      return '';
     }
     //uncomment this for :30
     //   return `${hour}:${minutes < 10 ? '0' : ''}${minutes}`;

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {forwardRef, useEffect, useState} from 'react';
 import {
   TouchableOpacity,
@@ -10,11 +11,8 @@ import {
   TextInputProps,
   TextInput,
   View,
-  ActivityIndicator,
   ViewProps,
   TextProps,
-  Platform,
-  TouchableNativeFeedback,
 } from 'react-native';
 import {commonStyles} from '../styles/styles';
 import Icon from 'react-native-vector-icons/Feather';
@@ -27,11 +25,9 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import {DateSchema} from 'yup';
 import {
   addDays,
   addWeeks,
-  endOfWeek,
   format,
   isBefore,
   isSameDay,
@@ -212,7 +208,7 @@ export const TextInputTitle: React.FC<TextInputTitleProps> = ({
       <TextInput
         style={[
           commonStyles.textInput,
-          error && {borderColor: 'red', borderWidth: 1},
+          error ? {borderColor: 'red', borderWidth: 1} : {},
         ]}
         {...textInputProps}
       />

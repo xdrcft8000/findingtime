@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "72150873807",
+    "project_id": "findingtime-8d6cf",
+    "storage_bucket": "findingtime-8d6cf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72150873807:android:634fc4a03d8a5999c469ba",
+        "android_client_info": {
+          "package_name": "com.findingtime"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXXT0Bxm0Ps9kZ0fRibnQqH9dg-BBNtds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

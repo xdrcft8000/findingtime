@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {useAuth} from './Auth';
+import {useAuth} from './context/Auth';
 import {
   Button,
   DateSelector,
@@ -18,7 +18,10 @@ import {
 import Icon2 from 'react-native-vector-icons/Feather';
 import COLOURS from '../constants/colours';
 import WeekSelector from './components/WeekSelector';
-import {useUser} from './User';
+import {useUser} from './context/User';
+import {initialWindowMetrics} from 'react-native-safe-area-context';
+import TimezoneButton from './components/TimezoneButton';
+import AvailabilitySlider from './components/AvailabilitySliderScreen';
 const {height} = Dimensions.get('window');
 
 const EditSelectionScreen = ({navigation}) => {
@@ -30,26 +33,42 @@ const EditSelectionScreen = ({navigation}) => {
   );
   const textInputRef = useRef<typeof TextInputClear>(null);
   const [loading, setLoading] = useState(false);
+  const [timezone, setTimezone] = useState(
+    user.selections[user.mostRecentSelection.current!].timezone,
+  );
+  const [step, setStep] = useState(1);
+  const [newStartHour, setNewStartHour] = useState(user.startHour);
+  const [newEndHour, setNewEndHour] = useState(user.endHour);
+  const insetTop = initialWindowMetrics?.insets.top;
 
-  const decideSize = (length: number) => {
-    if (length > 15) {
+  const decideSize2 = (text: string) => {
+    const count = (text.match(/[wWmMOU]/gi) || []).length;
+    const len = text.length + count;
+
+    if (len > 31) {
+      return 12;
+    } else if (len > 29) {
+      return 14;
+    } else if (len > 25) {
+      return 16;
+    } else if (len > 21) {
+      return 18;
+    } else if (len > 19) {
+      return 20;
+    } else if (len > 17) {
       return 22;
-    } else if (length > 10) {
+    } else if (len > 15) {
       return 25;
     } else {
       return 30;
     }
   };
-  const [titleSize, setTitleSize] = useState(decideSize(title.length));
+
+  const [titleSize, setTitleSize] = useState(decideSize2(title));
 
   const handleChangeTitle = (text: string) => {
-    setTitleSize(decideSize(text.length));
-    if (text.length > 13) {
-      const count = (text.match(/[wWmMOU]/gi) || []).length;
-      if (count > 13) {
-        setTitleSize(18);
-      }
-    }
+    setTitleSize(decideSize2(text));
+
     user.setSelectionTitle(text);
     setTitle(text);
   };
@@ -62,7 +81,7 @@ const EditSelectionScreen = ({navigation}) => {
     }
     setLoading(true);
     user
-      .editSelection()
+      .editSelection(timezone)
       .then(() => {
         setLoading(false);
         Alert.alert('Saved changes');
@@ -102,28 +121,81 @@ const EditSelectionScreen = ({navigation}) => {
     );
   };
 
-  const back = () => {
-    user.revertSelection();
-    navigation.goBack();
+  const saveWindow = () => {
+    user.loadSelectionForEdit(newStartHour, newEndHour);
+    setStep(2);
   };
+
+  const back = () => {
+    if (step === 1) {
+      navigation.goBack();
+    } else {
+      user.revertSelection();
+      setStep(1);
+    }
+  };
+
+  if (step === 1) {
+    return (
+      <AvailabilitySlider
+        saveWindow={saveWindow}
+        back={back}
+        newStartHour={newStartHour}
+        newEndHour={newEndHour}
+        setNewStartHour={setNewStartHour}
+        setNewEndHour={setNewEndHour}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, {}]}>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <TouchableOpacity onPress={showAlert}>
-          <Icon2
-            name="chevron-left"
-            size={25}
-            color={auth.dark ? COLOURS.white : COLOURS.black}
-            style={{padding: '8%'}}
-          />
-        </TouchableOpacity>
+      <TouchableOpacity
+        onPress={showAlert}
+        style={{
+          position: 'absolute',
+
+          marginTop: '5%',
+          marginLeft: '5%',
+          zIndex: 10,
+        }}>
+        <Icon2
+          name="chevron-left"
+          size={25}
+          color={auth.dark ? COLOURS.white : COLOURS.black}
+          style={{
+            paddingTop: insetTop!,
+          }}
+        />
+      </TouchableOpacity>
+      <TimezoneButton
+        containerStyle={{
+          marginRight: '2%',
+          marginTop: '1.5%',
+          justifyContent: 'flex-end',
+          paddingBottom: '2%',
+          position: 'absolute',
+          right: 1,
+          top: insetTop,
+          zIndex: 10,
+        }}
+        setTz={setTimezone}
+        tz={timezone}
+        dark={auth.dark}
+      />
+      <View
+        style={{
+          flexDirection: 'row',
+          marginBottom: '2%',
+          marginLeft: 50,
+          height: 60,
+        }}>
         <TextInputClear
           ref={textInputRef}
           dark={auth.dark}
           size={titleSize}
           font={'P'}
-          style={{padding: '5%'}}
+          style={{paddingLeft: '5%'}}
           onChangeText={handleChangeTitle}
           autoCorrect={false}
           maxLength={18}>
@@ -134,7 +206,7 @@ const EditSelectionScreen = ({navigation}) => {
         style={{
           width: '100%',
           justifyContent: 'center',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           padding: '5%',
           paddingBottom: 60,
         }}>
@@ -144,11 +216,8 @@ const EditSelectionScreen = ({navigation}) => {
           initialDate={user.date}
         />
         <WeekSelector
-          START_HOUR={
-            user.selections[user.mostRecentSelection.current!].startHour
-          }
-          END_HOUR={user.selections[user.mostRecentSelection.current!].endHour}
-          availibility={[]}
+          START_HOUR={user.startHour}
+          END_HOUR={user.endHour}
           containerStyle={{paddingTop: '10%'}}
           containerHeight={height * height * 0.00055}
           dark={auth.dark}

@@ -25,7 +25,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'findingtime' do
+target 'FindingTime' do
   config = use_native_modules!
   use_frameworks! :linkage => :static
   $RNFirebaseAsStaticFramework = true
@@ -41,7 +41,7 @@ target 'findingtime' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'findingtimeTests' do
+  target 'FindingTimeTests' do
     inherit! :complete
     # Pods for testing
   end

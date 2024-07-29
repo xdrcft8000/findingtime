@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {View, SafeAreaView} from 'react-native';
-import {useAuth} from './Auth';
+import {useAuth} from './context/Auth';
 import Animated, {
   runOnJS,
   useAnimatedStyle,

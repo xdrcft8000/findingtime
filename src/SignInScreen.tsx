@@ -6,15 +6,13 @@
 import React, {useRef, useState} from 'react';
 import {
   Dimensions,
-  KeyboardAvoidingView,
   SafeAreaView,
   Text,
   TouchableOpacity,
   useColorScheme,
-  View,
   Keyboard,
   Platform,
-  ScrollView,
+  Alert,
 } from 'react-native';
 import Animated, {
   Easing,
@@ -26,7 +24,7 @@ import {Button, Loading, TextInputTitle} from './components/Button';
 import {validateEmail, validateName, validatePassword} from './Validation';
 import COLOURS from '../constants/colours';
 import {darkStyles, lightStyles} from './styles/styles';
-import {useAuth} from './Auth';
+import {useAuth} from './context/Auth';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 const {height, width: screenWidth} = Dimensions.get('window');
@@ -203,6 +201,11 @@ const RegisterSection = ({animatedStyles}: {animatedStyles: any}) => {
                 setErrors({...errors, password: 'Password is too weak'});
               } else if (err.code === 'auth/invalid-password') {
                 setErrors({...errors, password: 'Invalid password'});
+              } else {
+                Alert.alert(
+                  'Error',
+                  'Unexpected error occurred, please check your internet connection and that your app is updated and try again.',
+                );
               }
             });
         }
@@ -315,7 +318,7 @@ function SignInScreen(): React.JSX.Element {
   const registerProgress = useSharedValue(0);
   const touchStartY = useRef(0);
 
-  const handleForward = event => {
+  const handleForward = (event: any) => {
     touchStartY.current = event.nativeEvent.pageY;
     blackProgress.value = withTiming(1, {
       duration: 400,

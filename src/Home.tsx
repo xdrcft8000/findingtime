@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {useAuth} from './Auth';
+import {useAuth} from './context/Auth';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import COLOURS from '../constants/colours';

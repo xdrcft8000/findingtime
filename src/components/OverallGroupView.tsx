@@ -8,12 +8,13 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import COLOURS from '../../constants/colours';
-import {useGroup} from '../Group';
+import {useGroup} from '../context/Group';
 import {interpolateColor} from 'react-native-reanimated';
 import Modal from 'react-native-modal';
 import {Text as EasyText} from './Button';
 import Icon2 from 'react-native-vector-icons/Feather';
-import { useAuth } from '../Auth';
+import {useAuth} from '../context/Auth';
+import { set } from 'date-fns';
 
 interface DisplayAvailibilityGridProps {
   START_HOUR: number;
@@ -47,31 +48,30 @@ const OverallGroupView: React.FC<DisplayAvailibilityGridProps> = ({
   const group = useGroup();
   const {authData} = useAuth();
   const duration = group.group!.duration;
-  const names = Object.keys(group.group!.compactedAvailability);
-
+  const names = Object.keys(group.compactedAvailability);
   const dayLength = END_HOUR - START_HOUR;
   const array = Array(dayLength * 32).fill(0);
   const styles = dark ? darkStyles : commonStyles;
   const maxScore = duration * names.length;
   let bestScore = useRef(0);
   const totalScores = useRef(
-    new Array(group.group!.compactedAvailability[names[0]].length).fill(0),
+    new Array(group.compactedAvailability[names[0]].length).fill(0),
   );
   const jointScores = useRef(
-    new Array(group.group!.compactedAvailability[names[0]].length).fill(0),
+    new Array(group.compactedAvailability[names[0]].length).fill(0),
   );
 
+  const [_reRender, setReRender] = useState(false);
   useEffect(() => {
     totalScores.current = new Array(
-      group.group!.compactedAvailability[names[0]].length,
+      group.compactedAvailability[names[0]].length,
     ).fill(0);
 
     for (let i = 0; i < jointScores.current.length; i++) {
       const scores = [];
       for (let j = 0; j < names.length; j++) {
-        scores.push(group.group!.compactedAvailability[names[j]][i]);
-        totalScores.current[i] +=
-          group.group!.compactedAvailability[names[j]][i];
+        scores.push(group.compactedAvailability[names[j]][i]);
+        totalScores.current[i] += group.compactedAvailability[names[j]][i];
       }
       jointScores.current[i] = Math.min(...scores);
     }
@@ -92,7 +92,6 @@ const OverallGroupView: React.FC<DisplayAvailibilityGridProps> = ({
     'Saturday',
     'Sunday',
   ];
-  const [_reRender, setReRender] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -103,9 +102,7 @@ const OverallGroupView: React.FC<DisplayAvailibilityGridProps> = ({
 
   const renderScoresModal = () => {
     const namesAndScores = [];
-    for (const [name, score] of Object.entries(
-      group.group!.compactedAvailability,
-    )) {
+    for (const [name, score] of Object.entries(group.compactedAvailability)) {
       let userName = name;
       if (name === authData?.name) {
         userName = 'You';
@@ -288,7 +285,6 @@ const OverallGroupView: React.FC<DisplayAvailibilityGridProps> = ({
   };
 
   // HUMAN READABLE OUTPUT
-
   return (
     <View style={[styles.container, containerStyle, {height: containerHeight}]}>
       <View style={styles.gridAndLabels}>

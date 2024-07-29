@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   PanResponder,
-  Image,
 } from 'react-native';
 import COLOURS from '../../constants/colours';
 import Icon from 'react-native-vector-icons/Feather';
@@ -33,7 +32,6 @@ const FONT_SIZE = 41 * 0.35;
 const TimeSelector: React.FC<TimeSelectorProps> = ({
   START_HOUR,
   END_HOUR,
-  availibility,
   dark,
 }) => {
   // MAIN ARRAY
@@ -81,10 +79,10 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   // SCROLLING X
 
   // RENDER HELPERS
-  const reset = () => {
-    squaresState.current = Array(DAY_LENGTH * 4).fill(false);
-    loadWindow();
-  };
+  // const reset = () => {
+  //   squaresState.current = Array(DAY_LENGTH * 4).fill(false);
+  //   loadWindow();
+  // };
 
   const doRender = () => {
     setReRender(rend => !rend);
@@ -259,9 +257,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   const renderItem = ({item, index}: {item: any; index: number}) => {
     const isLeftmostColumn = index % NUM_COLUMNS === 0;
     const isRightmostColumn = index % NUM_COLUMNS === NUM_COLUMNS - 1;
-
-    const indexVar = index % (NUM_COLUMNS * 4); //32
-    const hourVar = index % (NUM_COLUMNS * 4); //32
     return (
       <TouchableOpacity
         style={[
@@ -289,46 +284,6 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
         {/* <Text>{index}</Text> */}
       </TouchableOpacity>
     );
-  };
-
-  const getHour = (index: number) => {
-    const rawHour = index / 4 / NUM_COLUMNS + START_HOUR;
-
-    if (rawHour % 1 == 0) {
-      const hour = Math.floor(rawHour) + scrollAmount.current;
-      //const minutes = Math.round((rawHour % 1) * 60);
-      const clockHour = hour % 12 === 0 ? 12 : hour % 12;
-      const ampm = hour < 12 ? 'am' : 'pm';
-      return `${clockHour}${ampm}`;
-      //return `${hour}:00`;
-    }
-    {
-      return '';
-    }
-    //uncomment this for :30
-    //   return `${hour}:${minutes < 10 ? '0' : ''}${minutes}`;
-    // } else {
-    //   return `${rawHour}:00`;
-    // }
-  };
-
-  // HUMAN READABLE OUTPUT
-
-  const formatHour = (rawHour: number): string => {
-    if (rawHour === 24) {
-      return '12am';
-    }
-    if (rawHour === 12) {
-      return '12pm';
-    }
-    if (rawHour === 0) {
-      return '12am';
-    }
-    if (rawHour > 12) {
-      return `${(rawHour -= 12)}pm`;
-    } else {
-      return `${rawHour}am`;
-    }
   };
 
   const format24Hour = (rawHour: number): string => {

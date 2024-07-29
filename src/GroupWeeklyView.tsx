@@ -1,89 +1,66 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {useUser} from './User';
-import {useAuth} from './Auth';
+/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useEffect, useState} from 'react';
+import {useAuth} from './context/Auth';
 import {Dimensions, View} from 'react-native';
 import {DateSelector, Loading, Text} from './components/Button';
 import COLOURS from '../constants/colours';
-import {useGroup} from './Group';
+import {useGroup} from './context/Group';
 import {startOfWeek} from 'date-fns';
 import WeeklyGroupView from './components/WeeklyGroupView';
-
-interface GroupAvailability {
-  [key: string]: boolean[];
-}
+import {
+  formatDate,
+  getClosestDate,
+  trimSchedule,
+  trimSelection,
+} from './HelperFunctions';
+import {Selection} from './Models';
 
 export default function GroupWeeklyView() {
   const auth = useAuth();
-  const user = useUser();
   const group = useGroup();
   const [loading, setLoading] = useState(true);
   const [date, setDateState] = useState<Date>(
     startOfWeek(new Date(), {weekStartsOn: 1}), // Start week on Monday
   );
 
-  const startHour = useRef(0);
-  const endHour = useRef(0);
-  const [groupAvailability, setGroupAvailability] = useState<GroupAvailability>(
-    {},
-  );
+  const [groupAvailability, setGroupAvailability] = useState<Selection>({});
   const [jointAvailability, setJointAvailability] = useState<number[]>([]);
 
-  useEffect(() => {
-    group.getGroupSelections().then(() => {
-      const groupSelections = group.groupSelections.current;
-      let jointStartHour = 0;
-      let jointEndHour = 0;
-      for (const selections in groupSelections) {
-        const currStartHour = groupSelections[selections].startHour;
-        const currEndHour = groupSelections[selections].endHour;
-        if (currStartHour < jointStartHour) {
-          jointStartHour = currStartHour;
-        }
-        if (currEndHour > jointEndHour) {
-          jointEndHour = currEndHour;
-        }
-      }
-      startHour.current = jointStartHour;
-      endHour.current = jointEndHour;
-      compactAvailability(date);
-    });
-  }, []);
-
-  const handleDateChange = newDate => {
+  const handleDateChange = (newDate: Date) => {
     compactAvailability(newDate);
     setDateState(newDate);
   };
 
-  const compactAvailability = newDate => {
-    setLoading(true);
-    const groupSelections = group.groupSelections.current;
-    const jointsAvailability = Array(
-      (endHour.current - startHour.current) * 32,
-    ).fill(0);
-    const groupsAvailability: GroupAvailability = {};
-    for (const selections in groupSelections) {
-      const currentStartHour = groupSelections[selections].startHour;
-      const selection =
-        groupSelections[selections][
-          user.getClosestDate(
-            group.getDate(newDate),
-            groupSelections[selections],
-          )
-        ];
-      groupsAvailability[groupSelections[selections].userName] = Array(
-        (endHour.current - startHour.current) * 32,
-      ).fill(false);
-      const startIndex = (currentStartHour - startHour.current) * 32;
-      for (let i = startIndex; i < selection.length + startIndex; i++) {
-        jointsAvailability[i] += selection[i - startIndex];
-        groupsAvailability[groupSelections[selections].userName][i] =
-          selection[i - startIndex];
+  const compactAvailability = useCallback(
+    (newDate: Date) => {
+      const groupSelections = group.groupSelections.current;
+      const jointsAvailability = Array(768).fill(0);
+      const groupsAvailability: Selection = {};
+      for (const selections in groupSelections) {
+        const selection =
+          groupSelections[selections][
+            getClosestDate(formatDate(newDate), groupSelections[selections])
+          ];
+        groupsAvailability[groupSelections[selections].userName] =
+          Array(768).fill(0);
+        for (let i = 0; i < selection.length; i++) {
+          jointsAvailability[i] += selection[i];
+          groupsAvailability[groupSelections[selections].userName][i] =
+            selection[i] ? 1 : 0;
+        }
       }
-    }
-    setGroupAvailability(groupsAvailability);
-    setJointAvailability(jointsAvailability);
-    setLoading(false);
-  };
+      const {trimmedSchedule} = trimSchedule(groupsAvailability);
+      const {trimmedSelection} = trimSelection(jointsAvailability);
+      setGroupAvailability(trimmedSchedule);
+      setJointAvailability(trimmedSelection);
+      setLoading(false);
+    },
+    [group.groupSelections],
+  );
+
+  useEffect(() => {
+    compactAvailability(date);
+  }, [compactAvailability, date]);
 
   return (
     <View style={{flex: 1, paddingTop: '3%'}}>
@@ -99,8 +76,8 @@ export default function GroupWeeklyView() {
       ) : (
         <View style={{paddingTop: 28}}>
           <WeeklyGroupView
-            START_HOUR={startHour.current}
-            END_HOUR={endHour.current}
+            START_HOUR={group.startHour}
+            END_HOUR={group.endHour}
             containerHeight={Dimensions.get('window').height / 2.7}
             resetKey={0}
             dark={auth.dark}

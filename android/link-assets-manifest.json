@@ -1,0 +1,57 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/GowunDodum-Regular.ttf",
+      "sha1": "9e31ff9af4707638388fcb3f68ea37a756a387d2"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-Black.ttf",
+      "sha1": "8447710fac88b58e7f3b6f034ceda7eb3a036f4c"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-BlackItalic.ttf",
+      "sha1": "ea79a434bf4c907e18f51823de5c0ccce89ecf0c"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-Bold.ttf",
+      "sha1": "fb74d7e889a2c24dc08d5b931c620d47e607d11a"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-BoldItalic.ttf",
+      "sha1": "20080e453bfd141821b7686f516993b6d812113e"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-ExtraBold.ttf",
+      "sha1": "a65d3cc7e11169ae1bfc88db81005077afd020d2"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-ExtraBoldItalic.ttf",
+      "sha1": "c72c7e1a0582b0c8a65327b35dfdabff2e4744a7"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-Italic.ttf",
+      "sha1": "dd11369827ff1e0ba4071a275c5b3645b1ce6486"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-Medium.ttf",
+      "sha1": "8bf13110d20940f886ae02a07ec6068f4028740d"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-MediumItalic.ttf",
+      "sha1": "c01f61ddb79e4cef74325f043731143af3190919"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-Regular.ttf",
+      "sha1": "96a2e660869a872971935d18105d64eadd693ddb"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-SemiBold.ttf",
+      "sha1": "b50e2c15ddb338b15f08df6c2c37ce35f698148f"
+    },
+    {
+      "path": "assets/fonts/PlayfairDisplay-SemiBoldItalic.ttf",
+      "sha1": "a8d06a7536ea96a72e38112a2fcadf19504b0093"
+    }
+  ]
+}

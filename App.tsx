@@ -6,12 +6,15 @@
  */
 import React from 'react';
 import {Router} from './src/Router';
-import {AuthProvider} from './src/Auth';
+import {AuthProvider} from './src/context/Auth';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 const App = () => {
   return (
     <AuthProvider>
-      <Router />
+      <SafeAreaProvider>
+        <Router />
+      </SafeAreaProvider>
     </AuthProvider>
   );
 };

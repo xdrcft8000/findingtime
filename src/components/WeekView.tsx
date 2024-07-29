@@ -1,14 +1,14 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {View, FlatList, StyleSheet, Text, ViewStyle} from 'react-native';
 import COLOURS from '../../constants/colours';
-import {useUser} from '../User';
 
 interface DisplayAvailibilityGridProps {
   START_HOUR: number;
   END_HOUR: number;
   containerStyle?: ViewStyle;
   containerHeight: number;
-  availibility: boolean[];
+  availability: number[];
   resetKey: number;
   dark?: boolean;
 }
@@ -25,15 +25,17 @@ const OFFSET = 10;
 const FONT_SIZE = 41 * 0.35;
 
 const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
-  START_HOUR,
   containerStyle,
   containerHeight,
   resetKey,
   dark,
+  START_HOUR,
+  availability,
 }) => {
-  const {availability} = useUser();
   const styles = dark ? darkStyles : commonStyles;
-
+  // for (let i = 0; i < 100; i++) {
+  //   test(i, END_HOUR - START_HOUR);
+  // }
   useEffect(() => {
     setReRender(rend => !rend);
   }, [resetKey]);
@@ -50,7 +52,6 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
       <View
         style={[
           styles.hourSquare,
-          // eslint-disable-next-line react-native/no-inline-styles
           {
             borderWidth: 0,
             backgroundColor: 'rgba(255, 255, 255, 0)',
@@ -65,14 +66,13 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
       <View
         style={[
           styles.square,
-          // eslint-disable-next-line react-native/no-inline-styles
           {
-            backgroundColor: availability.current[index]
+            backgroundColor: availability[index]
               ? COLOURS.teal
               : dark
               ? COLOURS.darkgrey
               : 'white',
-            borderColor: dark ? 'black' : COLOURS.grey,
+            borderColor: dark ? 'black' : '#7a7979',
             borderTopWidth:
               indexVar > NUM_COLUMNS * 2
                 ? indexVar < NUM_COLUMNS * 3
@@ -100,16 +100,13 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
   const getHour = (index: number) => {
     const rawHour = index / ZOOM_QUOTIENT / NUM_COLUMNS + START_HOUR;
 
-    if (rawHour % 1 == 0) {
+    if (rawHour % 1 === 0) {
       const hour = Math.floor(rawHour);
       //const minutes = Math.round((rawHour % 1) * 60);
       const clockHour = hour % 12 === 0 ? 12 : hour % 12;
       const ampm = hour < 12 ? 'am' : 'pm';
       return `${clockHour}${ampm}`;
       //return `${hour}:00`;
-    }
-    {
-      return '';
     }
     //uncomment this for :30
     //   return `${hour}:${minutes < 10 ? '0' : ''}${minutes}`;
@@ -141,7 +138,7 @@ const WeekView: React.FC<DisplayAvailibilityGridProps> = ({
           <View style={styles.hours} />
           <View style={styles.grid}>
             <FlatList
-              data={availability.current}
+              data={availability}
               renderItem={renderItem}
               keyExtractor={(item, index) => index.toString()}
               numColumns={NUM_COLUMNS}

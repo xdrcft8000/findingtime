@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useAuth} from './Auth';
-import {useUser} from './User';
-import {Button, Loading, Text, TextInputClear} from './components/Button';
+import {useAuth} from './context/Auth';
+import {useUser} from './context/User';
+import {Button, Text, TextInputClear} from './components/Button';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -12,14 +12,16 @@ import {
   FlatList,
   Pressable,
 } from 'react-native';
-import {useGroup} from './Group';
+import {useGroup} from './context/Group';
 import Icon from 'react-native-vector-icons/Feather';
 import COLOURS from '../constants/colours';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {validateDuration, validateTitle} from './Validation';
+import {getCurrentOffsetFromGMT} from './HelperFunctions';
 interface SelectionTitles {
   key: string;
   title: string;
+  timezone: string;
 }
 
 const NewGroupScreen = ({navigation}) => {
@@ -75,7 +77,6 @@ const NewGroupScreen = ({navigation}) => {
     setName(text);
   };
 
-
   const handleNumberChange = (value: string) => {
     // Remove any non-numeric characters
     const numericValue = value.replace(/[^0-9]/g, '');
@@ -126,26 +127,23 @@ const NewGroupScreen = ({navigation}) => {
 
   const handleCreate = () => {
     setLoading(true);
-    group
-      .createGroup(
-        name,
-        parseInt(duration),
-        selection,
-        user.selections[selection].startHour,
-        user.selections[selection].endHour,
-      )
-      .then(groupcode => {
-        setCode(groupcode);
-        setLoading(false);
-        setStep(3);
-      });
+    group.createGroup(name, parseInt(duration), selection).then(groupcode => {
+      setCode(groupcode);
+      setLoading(false);
+      setStep(3);
+    });
   };
 
   const collectTitles = () => {
     let data = [];
     const keys = Object.keys(user.selections);
     for (let i = 0; i < keys.length; i++) {
-      data.push({title: user.selections[keys[i]].title, key: keys[i]});
+      const title = user.selections[keys[i]].title;
+      const timezoneOffset = getCurrentOffsetFromGMT(
+        user.selections[keys[i]].timezone,
+      );
+
+      data.push({title: title, key: keys[i], timezone: timezoneOffset});
     }
     setSelectionTitles(data);
   };
@@ -153,23 +151,35 @@ const NewGroupScreen = ({navigation}) => {
   const renderTitle = ({index, item}) => {
     return (
       <TouchableOpacity
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignContent: 'center',
+          padding: '5%',
+          backgroundColor:
+            selection === item.key ? (auth.dark ? 'black' : 'white') : null,
+          borderRadius: 10,
+        }}
         onPress={() => {
           setSelection(item.key);
         }}>
         <Text
           darkbg={auth.dark}
-          size={25}
+          size={20}
           font={'P'}
           style={{
-            padding: '5%',
-            backgroundColor:
-              selection === item.key ? (auth.dark ? 'black' : 'white') : null,
-            borderRadius: 10,
             overflow: 'hidden',
             textAlign: 'center',
+            maxWidth: '70%',
           }}>
           {item.title}
+          {'  '}
         </Text>
+        {user.useTimezones && (
+          <Text darkbg={auth.dark} size={14} font={'G'}>
+            {item.timezone}
+          </Text>
+        )}
       </TouchableOpacity>
     );
   };
@@ -310,7 +320,7 @@ const NewGroupScreen = ({navigation}) => {
           <FlatList
             key={user.resetKey}
             style={{
-              width: '70%',
+              width: user.useTimezones ? '95%' : '80%',
               marginHorizontal: '20%',
               paddingHorizontal: '10%',
               paddingBottom: -170,

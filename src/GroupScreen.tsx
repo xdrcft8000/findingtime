@@ -1,6 +1,7 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
-import {useUser} from './User';
-import {useAuth} from './Auth';
+import {useUser} from './context/User';
+import {useAuth} from './context/Auth';
 import {
   Alert,
   Dimensions,
@@ -13,14 +14,13 @@ import {Button, Text, WhiteButton} from './components/Button';
 import Icon from 'react-native-vector-icons/Feather';
 import Icon2 from 'react-native-vector-icons/FontAwesome';
 import COLOURS from '../constants/colours';
-import {useGroup} from './Group';
+import {useGroup} from './context/Group';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Modal from 'react-native-modal';
 import OverallGroupView from './components/OverallGroupView';
 import GroupWeeklyView from './GroupWeeklyView';
 
-
-export default function GroupScreen({navigation}) {
+export default function GroupScreen({navigation}: any) {
   const auth = useAuth();
   const user = useUser();
   const group = useGroup();
@@ -433,8 +433,8 @@ export default function GroupScreen({navigation}) {
       {viewState === 'overall' ? (
         <>
           <OverallGroupView
-            START_HOUR={group.group!.startHour}
-            END_HOUR={group.group!.endHour}
+            START_HOUR={group.startHour}
+            END_HOUR={group.endHour}
             containerHeight={Dimensions.get('window').height / 2.2}
             availibility={[]}
             resetKey={0}

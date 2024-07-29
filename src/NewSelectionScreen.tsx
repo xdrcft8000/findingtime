@@ -1,12 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {
-  Alert,
-  Dimensions,
-  SafeAreaView,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import {useAuth} from './Auth';
+import React, {useRef, useState} from 'react';
+import {Alert, Dimensions, TouchableOpacity, View} from 'react-native';
+import {useAuth} from './context/Auth';
 import {
   Button,
   DateSelector,
@@ -18,92 +12,25 @@ import {
 import Icon2 from 'react-native-vector-icons/Feather';
 import COLOURS from '../constants/colours';
 import WeekSelector from './components/WeekSelector';
-import {useUser} from './User';
-import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import {useUser} from './context/User';
 const {height} = Dimensions.get('window');
+import {
+  SafeAreaView,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
+import TimezoneButton from './components/TimezoneButton';
+import AvailabilitySlider from './components/AvailabilitySliderScreen';
 
-interface CustomMarkerProps {
-  currentValue: number;
-  dark: boolean;
-}
-
-const getHour = (hour: number) => {
-  const clockHour = hour % 12 === 0 ? 12 : hour % 12;
-  const ampm = hour < 12 ? 'am' : 'pm';
-  return `${clockHour}${ampm}`;
-};
-
-const CustomSliderMarkerLeft: React.FC<CustomMarkerProps> = ({
-  currentValue,
-  dark,
-}) => {
-  return (
-    <View
-      style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        marginTop: 1.5,
-        transform: [{rotate: '90deg'}],
-      }}>
-      <View
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: 10,
-          backgroundColor: 'white', // You can change the color as per your requirement
-        }}
-      />
-      <Text
-        darkbg={dark}
-        size={16}
-        font={'P'}
-        style={{position: 'absolute', left: 30}}>
-        {getHour(currentValue)}
-      </Text>
-    </View>
-  );
-};
-
-const CustomSliderMarkerRight: React.FC<CustomMarkerProps> = ({
-  currentValue,
-  dark,
-}) => {
-  return (
-    <View
-      style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        marginTop: 1.5,
-        transform: [{rotate: '90deg'}],
-      }}>
-      <View
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: 10,
-          backgroundColor: 'white', // You can change the color as per your requirement
-        }}
-      />
-      <Text
-        darkbg={dark}
-        size={16}
-        font={'P'}
-        style={{position: 'absolute', right: 30}}>
-        {getHour(currentValue)}
-      </Text>
-    </View>
-  );
-};
-
-const NewSelectionScreen = ({navigation}) => {
+const NewSelectionScreen = ({navigation}: any) => {
   const auth = useAuth();
   const user = useUser();
   const styles = auth.styles;
   const textInputRef = useRef<typeof TextInputClear>(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [timezone, setTimezone] = useState(user.defaultTimezone);
+  const [title, setTitle] = useState('New Selection');
+
   const showAlert = () => {
     Alert.alert(
       'Continue without saving?',
@@ -131,27 +58,34 @@ const NewSelectionScreen = ({navigation}) => {
     );
   };
 
-  const decideSize = (length: number) => {
-    if (length > 15) {
+  const decideSize2 = (text: string) => {
+    const count = (text.match(/[wWmMOU]/gi) || []).length;
+    const len = text.length + count;
+
+    if (len > 31) {
+      return 12;
+    } else if (len > 29) {
+      return 14;
+    } else if (len > 25) {
+      return 16;
+    } else if (len > 21) {
+      return 18;
+    } else if (len > 19) {
+      return 20;
+    } else if (len > 17) {
       return 22;
-    } else if (length > 10) {
+    } else if (len > 15) {
       return 25;
     } else {
       return 30;
     }
   };
 
-  const [title, setTitle] = useState('New Selection');
-  const [titleSize, setTitleSize] = useState(decideSize(title.length));
+  const [titleSize, setTitleSize] = useState(decideSize2(title));
 
   const handleChangeTitle = (text: string) => {
-    setTitleSize(decideSize(text.length));
-    if (text.length > 13) {
-      const count = (text.match(/[wWmMOU]/gi) || []).length;
-      if (count > 13) {
-        setTitleSize(18);
-      }
-    }
+    setTitleSize(decideSize2(text));
+
     user.setSelectionTitle(text);
     setTitle(text);
   };
@@ -164,7 +98,7 @@ const NewSelectionScreen = ({navigation}) => {
     }
     setLoading(true);
     user
-      .saveSelection(auth.authData!.id, auth.authData!.name)
+      .saveSelection(auth.authData!.id, auth.authData!.name, timezone)
       .then(() => {
         if (user.fromGroup.current) {
           user.fromGroup.current = false;
@@ -179,6 +113,11 @@ const NewSelectionScreen = ({navigation}) => {
       });
   };
 
+  const saveWindow = () => {
+    user.reset();
+    setStep(2);
+  };
+
   const back = () => {
     if (step === 1) {
       navigation.goBack();
@@ -187,126 +126,82 @@ const NewSelectionScreen = ({navigation}) => {
       setStep(1);
     }
   };
+  const insetTop = initialWindowMetrics?.insets.top;
 
   if (step === 1) {
-    return (
-      <SafeAreaView style={[styles.container, {}]}>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <TouchableOpacity
-            onPress={() => {
-              back();
-            }}>
-            <Icon2
-              name="chevron-left"
-              size={25}
-              color={auth.dark ? COLOURS.white : COLOURS.black}
-              style={{padding: '8%'}}
-            />
-          </TouchableOpacity>
-        </View>
-        <View
-          style={[
-            styles.container,
-            {
-              justifyContent: 'center',
-              alignItems: 'center',
-            },
-          ]}>
-          <Text
-            darkbg={auth.dark}
-            size={22}
-            font={'G'}
-            style={{paddingBottom: '40%', width: '80%', textAlign: 'center'}}>
-            Between what times might you have some availability?
-          </Text>
-          <MultiSlider
-            onValuesChange={values => {
-              user.setStartHour(24 - values[1]);
-              user.setEndHour(24 - values[0]);
-            }}
-            vertical={true}
-            values={[user.startHour, user.endHour]}
-            min={0}
-            max={24}
-            sliderLength={270}
-            minMarkerOverlapDistance={1}
-            isMarkersSeparated={true}
-            selectedStyle={{backgroundColor: COLOURS.teal}}
-            trackStyle={{
-              backgroundColor: auth.dark ? COLOURS.white : COLOURS.black,
-              width: 0.5,
-            }}
-            customMarkerLeft={e => {
-              return (
-                <CustomSliderMarkerLeft
-                  currentValue={24 - e.currentValue}
-                  dark={auth.dark}
-                />
-              );
-            }}
-            customMarkerRight={e => {
-              return (
-                <CustomSliderMarkerRight
-                  currentValue={24 - e.currentValue}
-                  dark={auth.dark}
-                />
-              );
-            }}
-          />
-          <Button
-            title={'Next'}
-            onPress={() => {
-              user.reset();
-              setStep(2);
-            }}
-            containerStyle={{marginTop: '50%'}}
-          />
-        </View>
-      </SafeAreaView>
-    );
+    return <AvailabilitySlider saveWindow={saveWindow} back={back} />;
   }
 
   return (
     <SafeAreaView style={[styles.container, {}]}>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <TouchableOpacity
-          onPress={() => {
-            showAlert();
-          }}>
-          <Icon2
-            name="chevron-left"
-            size={25}
-            color={auth.dark ? COLOURS.white : COLOURS.black}
-            style={{padding: '8%'}}
-          />
-        </TouchableOpacity>
+      <TouchableOpacity
+        onPress={showAlert}
+        style={{
+          position: 'absolute',
+
+          marginTop: '5%',
+          marginLeft: '5%',
+          zIndex: 10,
+        }}>
+        <Icon2
+          name="chevron-left"
+          size={25}
+          color={auth.dark ? COLOURS.white : COLOURS.black}
+          style={{
+            paddingTop: insetTop!,
+          }}
+        />
+      </TouchableOpacity>
+
+      <TimezoneButton
+        containerStyle={{
+          marginRight: '2%',
+          marginTop: '1.5%',
+          justifyContent: 'flex-end',
+          paddingBottom: '2%',
+          position: 'absolute',
+          right: 1,
+          top: insetTop,
+          zIndex: 10,
+        }}
+        setTz={setTimezone}
+        tz={timezone}
+        dark={auth.dark}
+      />
+
+      <View
+        style={{
+          flexDirection: 'row',
+          marginBottom: '2%',
+          marginLeft: 50,
+          height: 60,
+        }}>
         <TextInputClear
           ref={textInputRef}
           dark={auth.dark}
           size={titleSize}
           font={'P'}
-          style={{padding: '5%'}}
+          style={{paddingLeft: '5%'}}
           onChangeText={handleChangeTitle}
           autoCorrect={false}
           maxLength={18}>
           {title}
         </TextInputClear>
       </View>
+
       <View
         style={{
           width: '100%',
           justifyContent: 'center',
-          alignItems: 'flex-start',
-          padding: '5%',
+          alignItems: 'center',
           paddingBottom: 60,
         }}>
         <DateSelector dark={auth.dark} setDate={user.setDate} />
         <WeekSelector
           START_HOUR={user.startHour}
           END_HOUR={user.endHour}
-          availibility={[]}
           containerStyle={{paddingTop: '10%'}}
-          containerHeight={height * height * 0.00055}
+          containerHeight={height - (insetTop! + 60 + height / 2.6)}
           dark={auth.dark}
           resetKey={user.resetKey}
         />

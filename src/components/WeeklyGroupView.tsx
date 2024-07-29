@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
@@ -8,22 +9,19 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import COLOURS from '../../constants/colours';
-import {useGroup} from '../Group';
 import {interpolateColor} from 'react-native-reanimated';
 import Modal from 'react-native-modal';
 import {Text as EasyText} from './Button';
 import Icon2 from 'react-native-vector-icons/Feather';
-import {useAuth} from '../Auth';
-interface GroupAvailability {
-  [key: string]: boolean[];
-}
+import {useAuth} from '../context/Auth';
+import {Selection} from '../Models';
 
 interface DisplayAvailibilityGridProps {
   START_HOUR: number;
   END_HOUR: number;
   containerStyle?: ViewStyle;
   containerHeight: number;
-  groupAvailability: GroupAvailability;
+  groupAvailability: Selection;
   jointAvailability: number[];
   resetKey: number;
   dark: boolean;
@@ -186,7 +184,6 @@ const WeeklyGroupView: React.FC<DisplayAvailibilityGridProps> = ({
       <View
         style={[
           styles.hourSquare,
-          // eslint-disable-next-line react-native/no-inline-styles
           {
             borderWidth: 0,
             backgroundColor: 'rgba(255, 255, 255, 0)',
@@ -202,7 +199,6 @@ const WeeklyGroupView: React.FC<DisplayAvailibilityGridProps> = ({
         onPress={() => handleSquarePress(index)}
         style={[
           styles.square,
-          // eslint-disable-next-line react-native/no-inline-styles
           {
             backgroundColor:
               jointAvailability[index] === 0
@@ -260,16 +256,13 @@ const WeeklyGroupView: React.FC<DisplayAvailibilityGridProps> = ({
   const getHour = (index: number) => {
     const rawHour = index / ZOOM_QUOTIENT / NUM_COLUMNS + START_HOUR;
 
-    if (rawHour % 1 == 0) {
+    if (rawHour % 1 === 0) {
       const hour = Math.floor(rawHour);
       //const minutes = Math.round((rawHour % 1) * 60);
       const clockHour = hour % 12 === 0 ? 12 : hour % 12;
       const ampm = hour < 12 ? 'am' : 'pm';
       return `${clockHour}${ampm}`;
       //return `${hour}:00`;
-    }
-    {
-      return '';
     }
     //uncomment this for :30
     //   return `${hour}:${minutes < 10 ? '0' : ''}${minutes}`;

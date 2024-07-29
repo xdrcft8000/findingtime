@@ -1,16 +1,19 @@
+/* eslint-disable react-native/no-inline-styles */
 import {FlatList, SafeAreaView, TouchableOpacity, View} from 'react-native';
 import {Button, Text} from './components/Button';
-import {useGroup} from './Group';
-import {useUser} from './User';
-import {useAuth} from './Auth';
+import {useGroup} from './context/Group';
+import {useUser} from './context/User';
+import {useAuth} from './context/Auth';
 import {useState} from 'react';
 import React from 'react';
 import COLOURS from '../constants/colours';
 import Icon from 'react-native-vector-icons/Feather';
+import {getCurrentOffsetFromGMT} from './HelperFunctions';
 
 interface SelectionTitles {
   key: string;
   title: string;
+  timezone: string;
 }
 
 const JoinGroupScreen = ({navigation}) => {
@@ -27,11 +30,17 @@ const JoinGroupScreen = ({navigation}) => {
     collectTitles();
   }, []);
 
+
   const collectTitles = () => {
     let data = [];
     const keys = Object.keys(user.selections);
     for (let i = 0; i < keys.length; i++) {
-      data.push({title: user.selections[keys[i]].title, key: keys[i]});
+      const title = user.selections[keys[i]].title;
+      const timezoneOffset = getCurrentOffsetFromGMT(
+        user.selections[keys[i]].timezone,
+      );
+
+      data.push({title: title, key: keys[i], timezone: timezoneOffset});
     }
     setSelectionTitles(data);
   };
@@ -46,8 +55,8 @@ const JoinGroupScreen = ({navigation}) => {
       .joinGroup(selection, auth.authData!.id)
       .then(() => {
         setLoading(false);
-        // navigation.navigate('GroupScreen');
-        navigation.goBack();
+        navigation.navigate('Group');
+        // navigation.goBack();
       })
       .catch(e => console.log(e));
   };
@@ -55,27 +64,35 @@ const JoinGroupScreen = ({navigation}) => {
   const renderTitle = ({index, item}) => {
     return (
       <TouchableOpacity
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignContent: 'center',
+          padding: '5%',
+          backgroundColor:
+            selection === item.key ? (auth.dark ? 'black' : 'white') : null,
+          borderRadius: 10,
+        }}
         onPress={() => {
           setSelection(item.key);
         }}>
         <Text
           darkbg={auth.dark}
-          size={25}
+          size={20}
           font={'P'}
           style={{
-            padding: '5%',
-            backgroundColor:
-              selection === item.key
-                ? auth.dark
-                  ? 'black'
-                  : 'white'
-                : undefined,
-            borderRadius: 10,
             overflow: 'hidden',
             textAlign: 'center',
+            maxWidth: '70%',
           }}>
           {item.title}
+          {'  '}
         </Text>
+        {user.useTimezones && (
+          <Text darkbg={auth.dark} size={14} font={'G'}>
+            {item.timezone}
+          </Text>
+        )}
       </TouchableOpacity>
     );
   };
@@ -130,7 +147,7 @@ const JoinGroupScreen = ({navigation}) => {
         <FlatList
           key={user.resetKey}
           style={{
-            width: '70%',
+            width: user.useTimezones ? '95%' : '80%',
             marginHorizontal: '20%',
             paddingHorizontal: '10%',
             paddingBottom: -170,

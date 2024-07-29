@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
@@ -8,7 +9,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import {useAuth} from './Auth';
+import {useAuth} from './context/Auth';
 import {
   Button,
   DateSelector,
@@ -22,8 +23,10 @@ import Icon2 from 'react-native-vector-icons/Feather';
 import COLOURS from '../constants/colours';
 import Modal from 'react-native-modal';
 import WeekView from './components/WeekView';
-import {useUser} from './User';
+import {useUser} from './context/User';
 import Dialog from 'react-native-dialog';
+import {getCurrentOffsetFromGMT} from './HelperFunctions';
+import TimezoneModal from './components/TimezoneModal';
 
 const {height} = Dimensions.get('window');
 interface SelectionTitles {
@@ -31,7 +34,7 @@ interface SelectionTitles {
   value: string;
 }
 
-const ProfileScreen = ({navigation}) => {
+const ProfileScreen = ({navigation}: any) => {
   const auth = useAuth();
   const user = useUser();
   const styles = auth.styles;
@@ -47,6 +50,8 @@ const ProfileScreen = ({navigation}) => {
   const toggleOverlay = () => {
     setVisible(!visible);
   };
+
+  const [timezonesVisible, setTimezonesVisible] = useState(false);
   const [selectionTitles, setSelectionTitles] = useState<SelectionTitles[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetKey, setResetKey] = useState(0);
@@ -63,13 +68,24 @@ const ProfileScreen = ({navigation}) => {
       setResetKey(resetKey + 1);
       setLoading(false);
     }
-  }, [user.loading, user.selections, user.date]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.loading, user.selections]);
 
   const collectTitles = () => {
     let data = [];
     const keys = Object.keys(user.selections);
     for (let i = 0; i < keys.length; i++) {
-      data.push({key: keys[i], value: user.selections[keys[i]].title});
+      const title = user.selections[keys[i]].title;
+      const timezoneOffset = getCurrentOffsetFromGMT(
+        user.selections[keys[i]].timezone,
+      );
+      const fullTitle = user.useTimezones
+        ? `${title} (${timezoneOffset})`
+        : title;
+      data.push({
+        key: keys[i],
+        value: fullTitle,
+      });
     }
     setSelectionTitles(data);
     setResetKey(resetKey + 1);
@@ -134,6 +150,7 @@ const ProfileScreen = ({navigation}) => {
       {cancelable: false},
     );
   };
+
   const androidReloginAlert = () => {
     setPromptVisible(true);
     // prompt(
@@ -204,7 +221,7 @@ const ProfileScreen = ({navigation}) => {
     }
     auth
       .signIn(auth.authData!.email, passinput)
-      .then(res => {
+      .then(_res => {
         handleDeleteAccount();
       })
       .catch(err => {
@@ -216,7 +233,6 @@ const ProfileScreen = ({navigation}) => {
   };
 
   const handleDeleteAccount = () => {
-    console.log('handling delete');
     auth.deleteUser().then(() => {
       user.deleteUserData(auth.authData!.id);
     });
@@ -224,6 +240,9 @@ const ProfileScreen = ({navigation}) => {
 
   const handleNewSelection = () => {
     setSelected('');
+    user.setStartHour(9);
+    user.setEndHour(17);
+
     user.mostRecentSelection.current = null;
 
     navigation.navigate('New Selection');
@@ -235,6 +254,11 @@ const ProfileScreen = ({navigation}) => {
     navigation.navigate('Edit Selection');
     user.copySelection();
     user.setSelectionTitle(user.selections[selected].title);
+  };
+
+  const handleChangeTz = (tz: string) => {
+    user.setDefaultTimezone(tz, true);
+    setSelected('');
   };
 
   return (
@@ -287,7 +311,7 @@ const ProfileScreen = ({navigation}) => {
             style={{
               width: '100%',
               justifyContent: 'center',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               padding: '5%',
               zIndex: -10,
               paddingBottom: 60,
@@ -301,16 +325,9 @@ const ProfileScreen = ({navigation}) => {
                   key={resetKey}
                 />
                 <WeekView
-                  START_HOUR={user.selections[selected].startHour}
-                  END_HOUR={user.selections[selected].endHour}
-                  availibility={
-                    user.selections[selected][
-                      user.getClosestDate(
-                        user.getDate(),
-                        user.availabilitySelection.current,
-                      )!
-                    ]
-                  }
+                  START_HOUR={user.startHour}
+                  END_HOUR={user.endHour}
+                  availability={user.availability.current}
                   containerStyle={{paddingTop: '10%'}}
                   containerHeight={height * height * 0.0005}
                   dark={auth.dark}
@@ -370,7 +387,7 @@ const ProfileScreen = ({navigation}) => {
             onSwipeComplete={toggleOverlay}
             onBackdropPress={toggleOverlay}
             useNativeDriverForBackdrop={true}
-            swipeDirection={['down']}
+            swipeDirection={timezonesVisible ? undefined : ['down']}
             style={{
               justifyContent: 'flex-end',
               alignItems: 'center',
@@ -417,6 +434,22 @@ const ProfileScreen = ({navigation}) => {
                   value={auth.dark}
                 />
               </View>
+              <Button
+                title={`Change Timezone (${getCurrentOffsetFromGMT(
+                  user.defaultTimezone,
+                )})`}
+                onPress={() => {
+                  setTimezonesVisible(true);
+                }}
+              />
+              <TimezoneModal
+                dark={auth.dark}
+                setVisible={setTimezonesVisible}
+                visible={timezonesVisible}
+                setTz={handleChangeTz}
+                resetText={'Set to current'}
+                resetTz={Intl.DateTimeFormat().resolvedOptions().timeZone}
+              />
               <Button
                 title={'Sign Out'}
                 onPress={() => {

@@ -1,11 +1,11 @@
 import React from 'react';
-import {useUser} from './User';
-import {useAuth} from './Auth';
+import {useUser} from './context/User';
+import {useAuth} from './context/Auth';
 import {TouchableOpacity, View} from 'react-native';
 import {Text} from './components/Button';
 import Icon2 from 'react-native-vector-icons/Feather';
 import COLOURS from '../constants/colours';
-import {useGroup} from './Group';
+import {useGroup} from './context/Group';
 
 export default function DayLengthSelector({navigation}) {
   const user = useUser();

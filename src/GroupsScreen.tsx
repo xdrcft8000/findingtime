@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Alert,
   FlatList,
@@ -10,19 +10,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {useAuth} from './Auth';
+import {useAuth} from './context/Auth';
 import {Button, Loading, Text, WhiteButton} from './components/Button';
-import {useUser} from './User';
+import {useUser} from './context/User';
 import COLOURS from '../constants/colours';
 import Icon2 from 'react-native-vector-icons/Feather';
-import {Group, useGroup} from './Group';
+import {useGroup} from './context/Group';
 import Modal from 'react-native-modal';
+import {Group} from './Models';
 
-const GroupsScreen = ({navigation}) => {
+const GroupsScreen = ({navigation}: any) => {
   const auth = useAuth();
   const user = useUser();
   const group = useGroup();
   const styles = auth.styles;
+  const [pageLoading, setPageLoading] = useState(true);
   const [joinPressed, setJoinPressed] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [visible, setVisible] = useState(false);
@@ -34,6 +36,8 @@ const GroupsScreen = ({navigation}) => {
       setVisible(!visible);
     }
   };
+  const [groupsArrayState, setGroupsArrayState] = useState([] as GroupsArray);
+
   const handleNewGroup = () => {
     toggleOverlay();
     //continue after a delay
@@ -59,14 +63,17 @@ const GroupsScreen = ({navigation}) => {
           }
         }
       })
-      .catch(err => {
+      .catch(_ => {
         Alert.alert("That's not the right code");
       });
   };
 
-  const handleGoToGroup = (item: Group) => {
-    group.setGroup(item);
-    navigation.navigate('Group');
+  const handleGoToGroup = (item: GroupWithLoading) => {
+    setLoading(item.group.id, true);
+    group.loadGroup(item.group).then(() => {
+      setLoading(item.group.id, false);
+      navigation.navigate('Group');
+    });
   };
 
   const showAlert = () => {
@@ -98,27 +105,59 @@ const GroupsScreen = ({navigation}) => {
     }
   };
 
-  type GroupsArray = Group[];
+  type GroupWithLoading = {
+    group: Group;
+    loading: boolean;
+  };
 
-  const groupsArray: GroupsArray = Object.keys(group.groups).map(id => ({
-    id,
-    adminIDs: group.groups[id].adminIDs,
-    name: group.groups[id].name,
-    startDate: group.groups[id].startDate,
-    endDate: group.groups[id].endDate,
-    selections: group.groups[id].selections,
-    userIDs: group.groups[id].userIDs,
-    duration: group.groups[id].duration,
-    startHour: group.groups[id].startHour,
-    endHour: group.groups[id].endHour,
-    code: group.groups[id].code,
-    compactedAvailability: group.groups[id].compactedAvailability,
-  }));
+  type GroupsArray = GroupWithLoading[];
 
-  const renderItem = ({item}: {item: Group}) => {
+  useEffect(() => {
+    if (group.loading) {
+      return;
+    }
+    const groupsArray: GroupsArray = Object.keys(group.groups).map(id => ({
+      group: {
+        id,
+        adminIDs: group.groups[id].adminIDs,
+        name: group.groups[id].name,
+        startDate: group.groups[id].startDate,
+        endDate: group.groups[id].endDate,
+        selections: group.groups[id].selections,
+        userIDs: group.groups[id].userIDs,
+        duration: group.groups[id].duration,
+        code: group.groups[id].code,
+        compactedAvailability: group.groups[id].compactedAvailability,
+        lastUpdated: group.groups[id].lastUpdated,
+      },
+      loading: false,
+    }));
+    setGroupsArrayState(groupsArray);
+    setPageLoading(false);
+  }, [group.groups, group.loading]);
+
+  const setLoading = (groupId: string, loading: boolean) => {
+    setGroupsArrayState(prevGroupsArray =>
+      prevGroupsArray.map(groupWithLoading =>
+        groupWithLoading.group.id === groupId
+          ? {...groupWithLoading, loading}
+          : groupWithLoading,
+      ),
+    );
+  };
+
+  const renderItem = ({item}: {item: GroupWithLoading}) => {
     return (
       <TouchableOpacity
-        style={{borderBottomWidth: 1, borderBottomColor: COLOURS.teal}}
+        style={{
+          display: 'flex',
+          borderBottomWidth: 1,
+          borderBottomColor: COLOURS.teal,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignContent: 'center',
+          alignItems: 'center',
+        }}
         onPress={() => handleGoToGroup(item)}>
         <Text
           darkbg={auth.dark}
@@ -128,15 +167,18 @@ const GroupsScreen = ({navigation}) => {
             padding: '5%',
             paddingLeft: '10%',
           }}>
-          {item.name}
+          {item.group.name}
         </Text>
+        {item.loading && (
+          <Loading size={15} containerStyle={{marginRight: '10%'}} />
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
     <>
-      {!group.loading ? (
+      {!group.loading && !pageLoading ? (
         <SafeAreaView style={[styles.container, {}]}>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
             <Text
@@ -156,7 +198,7 @@ const GroupsScreen = ({navigation}) => {
             </TouchableOpacity>
           </View>
 
-          <FlatList data={groupsArray} renderItem={renderItem} />
+          <FlatList data={groupsArrayState} renderItem={renderItem} />
           <Modal
             testID={'modal'}
             isVisible={visible}

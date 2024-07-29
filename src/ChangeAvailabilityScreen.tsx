@@ -1,12 +1,12 @@
 import {FlatList, SafeAreaView, TouchableOpacity, View} from 'react-native';
 import {Button, Text} from './components/Button';
-import {useGroup} from './Group';
-import {useUser} from './User';
-import {useAuth} from './Auth';
+import {useGroup} from './context/Group';
+import {useAuth} from './context/Auth';
 import {useState} from 'react';
 import React from 'react';
 import COLOURS from '../constants/colours';
 import Icon from 'react-native-vector-icons/Feather';
+import {useUser} from './context/User';
 
 interface SelectionTitles {
   key: string;
@@ -49,7 +49,7 @@ const ChangeAvailabilityScreen = ({navigation}) => {
       .changeAvailability(selection, Object.keys(user.selections))
       .then(() => {
         setLoading(false);
-        navigation.goBack();
+        navigation.navigate('GroupsScreen');
       })
       .catch(e => console.log(e));
   };
